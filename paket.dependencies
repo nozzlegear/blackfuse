@@ -1,0 +1,16 @@
+framework >= netstandard1.0
+source https://www.nuget.org/api/v2
+source https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
+
+nuget fsharp.core redirects: force
+nuget suave
+nuget ILLink.Tasks  ~> 0.1.4-preview-981901
+nuget status
+nuget Fable.JsonConverter
+nuget jose-jwt
+nuget newtonsoft.json
+
+group Build
+  source https://nuget.org/api/v2
+  framework >= net461
+  nuget FAKE
