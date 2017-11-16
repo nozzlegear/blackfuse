@@ -5,6 +5,7 @@ let publicFolder =
     [
         "../client/public"
         "./src/client/public"
+        "./deploy/public"
         "./public"
     ]
     |> Seq.tryFind Directory.Exists

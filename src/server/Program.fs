@@ -35,14 +35,20 @@ let main argv =
     let wildcardRoute = request (fun req ->
         let apiRegex = Regex "(?i)^api/"
         let publicRegex = Regex "(?i)^public/.*"
+        let faviconRegex = Regex "(?i)^favicon\.ico"
 
-        if apiRegex.IsMatch req.path then
+        match req.path with
+        | p when apiRegex.IsMatch p ->
             // Request to API path fell through, route was not found.
             raise <| HttpException(sprintf "No API route found at path %s" req.path, Status.Code.NotFound)
-        elif publicRegex.IsMatch req.path then
+        | p when publicRegex.IsMatch p ->
             // TODO: Check if file exists, throw exception if it doesn't
             raise <| System.NotImplementedException("Public path not implemented")
-        else
+        | p when faviconRegex.IsMatch p ->
+            // Some browsers automatically send a request to /favicon.ico, despite what you might specify in your html.
+            raise <| System.NotImplementedException("Favicon path not implemented")
+        | _ ->
+            // Wildcard, send the index.html and let the client figure out its own 404s
             let indexPath = System.IO.Path.Combine(Folder.publicFolder, "index.html")
 
             sendFile indexPath true

@@ -1,6 +1,5 @@
 {
   "name": "blackfuse",
-  "version": "1.0.0",
   "private": true,
   "scripts": {
     "barrel": "echo 'No barrels configured'",
