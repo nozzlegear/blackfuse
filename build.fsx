@@ -93,9 +93,7 @@ Target "Build" (fun _ ->
 FinalTarget "KillProcess" (fun _ ->
     killProcess "dotnet"
     killProcess "dotnet.exe"
-    killProcess "node"
-    killProcess "node.exe"
-    // killAllCreatedProcesses ()
+    killAllCreatedProcesses ()
 )
 
 Target "Run" (fun _ ->
