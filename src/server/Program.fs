@@ -3,7 +3,7 @@
 open System
 open Suave
 open Suave.Operators
-open Exceptions
+open Errors
 open Domain
 open System.Text.RegularExpressions
 open Suave.Files
@@ -17,7 +17,7 @@ let main argv =
             | _ ->
                 // Call the default error handler to preserve default logging behavior
                 defaultConfig.errorHandler err msg ctx |> ignore
-                ErrorResponse.FromStatus msg Status.Code.InternalServerError
+                Errors.fromStatus msg Status.Code.InternalServerError
         let httpCode =
             match HttpCode.tryParse errorResponse.statusCode with
             | Choice1Of2 code -> code
@@ -29,13 +29,13 @@ let main argv =
         |> Json.stringify
         |> Successful.OK
         >=> Writers.setStatus httpCode
-        >=> Writers.setMimeType "application/json"
+        >=> Writers.setMimeType Json.MimeType
         <| ctx
 
     let wildcardRoute = request (fun req ->
-        let apiRegex = Regex "(?i)^api/"
-        let publicRegex = Regex "(?i)^public/.*"
-        let faviconRegex = Regex "(?i)^favicon\.ico"
+        let apiRegex = Regex "(?i)^/?api/"
+        let publicRegex = Regex "(?i)^/?public/.*"
+        let faviconRegex = Regex "(?i)^/?favicon\.ico"
 
         match req.path with
         | p when apiRegex.IsMatch p ->
@@ -54,11 +54,16 @@ let main argv =
             sendFile indexPath true
     )
 
+    let allRoutes =
+        Routes.Auth.routes
+        @[wildcardRoute] // Wildcard should come last
+        |> choose
+
     let config =
         { defaultConfig with
             errorHandler = errorHandler
             bindings = [HttpBinding.createSimple Protocol.HTTP "0.0.0.0" 3000] }
 
-    Suave.Web.startWebServer config (choose [wildcardRoute])
+    Suave.Web.startWebServer config allRoutes
 
     0 // return an integer exit code

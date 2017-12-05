@@ -1,6 +1,7 @@
 framework >= netstandard1.0
 source https://www.nuget.org/api/v2
 source https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
+storage:none
 
 nuget fsharp.core redirects: force
 nuget suave
@@ -9,6 +10,12 @@ nuget status
 nuget Fable.JsonConverter
 nuget jose-jwt
 nuget newtonsoft.json
+nuget Fable.Core
+nuget Fable.Import.Browser
+nuget Fable.React
+clitool dotnet-fable
+nuget Fable.PowerPack
+nuget fable.validation
 
 group Build
   source https://nuget.org/api/v2

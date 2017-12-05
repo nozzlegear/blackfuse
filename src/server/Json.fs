@@ -13,3 +13,9 @@ let stringify value =
 
 let parse<'a> (json:string) : 'a =
     JsonConvert.DeserializeObject<'a>(json, [|jsonConverter|])
+
+let parseFromBody<'a> (body: byte[]) =
+    let json = System.Text.Encoding.UTF8.GetString body
+    parse<'a> json
+
+let MimeType = "application/json"

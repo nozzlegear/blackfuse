@@ -5,3 +5,4 @@ ILLink.Tasks
 FSharp.Core
 status
 newtonsoft.json
+fable.validation

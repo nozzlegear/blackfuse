@@ -1,47 +1,24 @@
 const fs = require('fs');
 const path = require('path');
-const readPkg = require('read-pkg');
 const webpack = require('webpack');
-const HappyPack = require("happypack");
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const fableUtils = require("fable-utils");
 
-// Hack for Ubuntu on Windows: interface enumeration fails with EINVAL, so return empty.
-try {
-    require('os').networkInterfaces()
-}
-catch (e) {
-    require('os').networkInterfaces = () => ({})
+function resolve(filePath) {
+    return path.join(__dirname, filePath)
 }
 
-const pkg = readPkg.sync();
-const production = process.env["NODE_ENV"] === "production";
-const isWatching = process.argv.indexOf("--watch") > -1 || process.argv.some(a => a.indexOf("webpack-dev-server") > -1);
-
-function buildHappyPackPlugin() {
-    const base = {
-        id: "ts",
-        threads: 2
-    }
-    const query = { happyPackMode: true }
-    const tsLoader = {
-        path: "ts-loader",
-        query: query
-    }
-
-    return new HappyPack({
-        ...base,
-        loaders: [
-            {
-                path: "babel-loader",
-                exclude: /node_modules\/(?!(react-win-dialog|gearworks-http)\/).*/,
-                query: {
-                    babelrc: true,
-                }
+const isProduction = process.env["NODE_ENV"] === "production";
+const babelOptions = fableUtils.resolveBabelOptions({
+    presets: [
+        ["env", {
+            "targets": {
+                "browsers": ["last 2 versions"]
             },
-            tsLoader
-        ]
-    })
-}
+            "modules": false
+        }]
+    ],
+    plugins: ["transform-runtime"]
+});
 
 /**
  * Takes a list of plugins and only returns those that are not undefined. Useful when you only pass plugins in certain conditions.
@@ -50,13 +27,12 @@ function filterPlugins(plugins) {
     return (plugins || []).filter(plugin => !!plugin);
 }
 
-const clientConfig = {
-    entry: {
-        "client": ["babel-polyfill", "./src/client/client.tsx"]
-    },
+module.exports = {
+    devtool: "source-map",
+    entry: resolve("./src/client/client.fsproj"),
     output: {
-        filename: "[name].js",
-        path: path.join(__dirname, "src/client/public/js"),
+        filename: "client.js",
+        path: resolve("./src/client/public/js"),
         // Important: publicPath must begin with a / but must not end with one. Else hot module replacement won't find updates.
         publicPath: "/public/js",
     },
@@ -72,42 +48,40 @@ const clientConfig = {
         inline: true
     },
     plugins: filterPlugins([
-        new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
         new webpack.DefinePlugin({
-            "_VERSION": `"${pkg.version}"`,
             "NODE_ENV": `"${process.env.NODE_ENV}"` || `"development"`,
             // Process.env is necessary for bundling React in production
             "process.env": {
                 "NODE_ENV": `"${process.env.NODE_ENV}"` || `"development"`,
             }
         }),
-        buildHappyPackPlugin(),
-        production ? undefined : new webpack.NoEmitOnErrorsPlugin(),
-        production ? undefined : new webpack.HotModuleReplacementPlugin(),
+        isProduction ? undefined : new webpack.NoEmitOnErrorsPlugin(),
+        isProduction ? undefined : new webpack.HotModuleReplacementPlugin(),
     ]),
     resolve: {
         // Add `.ts` and `.tsx` as a resolvable extension.
-        extensions: ['.ts', '.tsx', '.js', '.styl', '.stylus']
-    },
-    externals: {
-
+        extensions: ['.ts', '.tsx', '.js', '.styl', '.stylus'],
+        modules: [resolve("./node_modules/")]
     },
     module: {
         rules: [
             {
-                test: /\.js$/,
-                exclude: /node_modules\/(?!(react-win-dialog|gearworks-http)\/).*/,
+                test: /\.fs(x|proj)?$/,
                 use: {
-                    loader: 'babel-loader',
+                    loader: "fable-loader",
                     options: {
-                        babelrc: true
+                        babel: babelOptions,
+                        define: isProduction ? [] : ["DEBUG"]
                     }
                 }
             },
             {
-                test: /\.tsx?$/,
-                exclude: /node_modules\/(?!(react-win-dialog|gearworks-http)\/).*/,
-                loader: 'happypack/loader?id=ts'
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: babelOptions
+                },
             },
             {
                 test: /\.styl[us]?$/,
@@ -115,7 +89,4 @@ const clientConfig = {
             }
         ],
     },
-    devtool: "source-map"
 }
-
-module.exports = clientConfig

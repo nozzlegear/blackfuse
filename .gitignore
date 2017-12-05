@@ -186,3 +186,6 @@ paket-files
 # Ignore generated constant files
 src/client/[Cc]onstants.ts
 src/server/[Cc]onstants.fs
+
+# Ignore crypto password file
+src/server/temp/token.txt

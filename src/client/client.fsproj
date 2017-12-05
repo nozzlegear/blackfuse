@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../shared/String.fs" />
+    <Compile Include="../shared/Date.fs" />
+    <Compile Include="../shared/Constants.fs" />
+    <Compile Include="../shared/Domain.fs" />
+    <Compile Include="../shared/Validation.fs" />
+    <Compile Include="Constants.fs" />
+    <Compile Include="import/Fable.Import.ReactMaterialNavbar.fs" />
+    <Compile Include="import/Fable.Import.ReactIcons.fs" />
+    <Compile Include="import/Fable.Import.ReactSidebar.fs" />
+    <Compile Include="import/Fable.Import.Mobx.fs" />
+    <Compile Include="import/Fable.Import.MobxReact.fs" />
+    <Compile Include="import/Fable.Import.ReactWinDialog.fs" />
+    <Compile Include="import/Fable.Import.History.fs" />
+    <Compile Include="import/Fable.Import.RouteMatcher.fs" />
+    <Compile Include="import/Fable.Import.JsCookie.fs" />
+    <Compile Include="import/Fable.Import.JwtSimple.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Services.fs" />
+    <Compile Include="stores/Auth.fs" />
+    <Compile Include="stores/Nav.fs" />
+    <Compile Include="Router.fs" />
+    <Compile Include="Components.fs" />
+    <Compile Include="pages/auth/Login.fs" />
+    <Compile Include="App.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

@@ -5,10 +5,17 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Domain.fs" />
+    <Compile Include="../shared/String.fs" />
+    <Compile Include="../shared/Date.fs" />
+    <Compile Include="../shared/Constants.fs" />
+    <Compile Include="../shared/Domain.fs" />
+    <Compile Include="../shared/Validation.fs" />
     <Compile Include="Folder.fs" />
     <Compile Include="Json.fs" />
-    <Compile Include="Exceptions.fs" />
+    <Compile Include="Errors.fs" />
+    <Compile Include="Jwt.fs" />
+    <Compile Include="Filters.fs" />
+    <Compile Include="routes/Auth.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
