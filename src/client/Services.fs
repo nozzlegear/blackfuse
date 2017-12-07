@@ -7,16 +7,31 @@ open Domain
 open Fable.PowerPack.Fetch
 
 let getResponse (request: Fable.Import.JS.Promise<Response>) = promise {
-    let! result = request
-    let! text = result.text()
+    let! result = Promise.result request
 
-    return
-        match result.Ok with
-            | true ->
-                Ok text
-            | false ->
-                ofJson<ErrorResponse> text
-                |> Error
+    match result with
+    | Error e ->
+        printfn "Problem with request: %A" e
+
+        let message =
+            try
+                let ex = e :> System.Exception
+                ex.Message
+            with
+            | _ -> "There was a problem with the request and it could not be completed."
+
+        let resp: ErrorResponse =
+            { message = message
+              statusCode = -1
+              statusDescription = "Request Error" }
+
+        return Error resp
+    | Ok result ->
+        let! text = result.text()
+
+        return
+            if result.Ok then Ok text
+            else ofJson<ErrorResponse> text |> Error
 }
 
 [<PassGenerics>]
@@ -47,7 +62,12 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
 
 module Auth =
     open Domain.Requests.Auth
-    let login (data: CreateSession) =
+    let login (data: LoginOrRegister) =
         Some data
         |> sendRequest "/api/v1/auth" HttpMethod.POST
+        |> getResponse
+
+    let register (data: LoginOrRegister) =
+        Some data
+        |> sendRequest "/api/v1/users" HttpMethod.POST
         |> getResponse
