@@ -5,12 +5,13 @@ open Fable.Core.JsInterop
 
 type IChange<'T> =
     interface
+    abstract ``type``: string
     abstract newValue: 'T with get, set
     end
 
 type IComputed<'T> =
     abstract get: unit -> 'T
-    abstract observe: block: ('T -> unit) -> unit
+    abstract observe: block: (IChange<'T> -> unit) -> unit
 
 type IObservable<'T> =
     inherit IComputed<'T>
