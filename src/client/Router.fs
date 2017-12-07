@@ -72,27 +72,33 @@ let rec tryMatchRoute currentPath (route: Route): (obj * OnBeforeEnter * (obj ->
             Some (dict, onBeforeEnter, getReactElement)
         | None -> None
 
+type MatchedRoute = obj * (obj -> React.ReactElement)
+
 let router (routes: Route list) (notFound: RouteResult) =
-    // TODO: Maybe add an interceptor on the location observable that will run the onBeforeEnter functions of each route?
-    // That way the router function will never fire if the interceptor changes the location first?
-    // Or maybe that won't work, because we would need to change both the interceptor value and the browser value at the same time.
+    let matchedRoute = Mobx.boxedObservable<MatchedRoute> (createEmpty, fun _ -> R.noscript [] [])
+    let getChildMatch (loc: Browser.Location): MatchedRoute =
+        routes
+        |> Seq.map (tryMatchRoute loc.pathname)
+        |> Seq.filter Option.isSome
+        |> Seq.map Option.get
+        |> Seq.tryHead
+        |> function
+            | Some (dict, onBeforeEnter, routeResult) ->
+                match onBeforeEnter loc with
+                | None -> dict, routeResult
+                | Some newLoc ->
+                    // if the beforeEnter function returns Some we need to short-circuit this route and replace it with the given one
+                    createEmpty, fun _ -> R.noscript [P.Ref (fun _ -> replace newLoc |> ignore)] []
+            | None -> createEmpty, notFound
+
+    // Match the current location, then let the observable handle changes
+    Mobx.get location |> getChildMatch |> Mobx.set matchedRoute
+    Mobx.observe location (fun loc -> getChildMatch loc.newValue |> Mobx.set matchedRoute)
 
     fun _ ->
-        let loc = mobx.get location
-        let matchedRoutes =
-            routes
-            |> Seq.map (tryMatchRoute loc.pathname)
-            |> Seq.filter Option.isSome
-            |> Seq.map Option.get
+        let routeDict, getRouteChild = Mobx.get matchedRoute
 
-        match Seq.tryHead matchedRoutes with
-        | Some (dict, onBeforeEnter, routeResult) ->
-            // if the beforeEnter function returns Some we need some way of short-circuting this route and replacing it with the given one
-            match onBeforeEnter loc with
-            | None -> routeResult dict
-            | Some newLoc ->
-                R.noscript [P.Ref (fun _ -> replace newLoc |> ignore)] []
-        | None -> notFound createEmpty
+        getRouteChild routeDict
     |> MobxReact.Observer
 
 let route path handler = Route (path, None, handler)
