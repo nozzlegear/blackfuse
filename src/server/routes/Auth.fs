@@ -6,32 +6,33 @@ open Suave
 open Filters
 open Operators
 
-let rec createSession = request <| fun req ctx -> async {
+let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
+    // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
+    let cookieExpiration = DateTimeOffset.UtcNow.AddYears 10
+
+    { email = data.username
+      created = Date.toUnixTimestamp <| DateTime.UtcNow.AddDays -90.
+      hashedPassword = "temp"
+      id = "abcd-1234" }
+    |> Jwt.encode Jwt.DefaultExpiration
+    |> HttpCookie.createKV Constants.CookieName
+    |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
+
+let login = request <| fun req ctx -> async {
     let body =
         req.rawForm
-        |> Json.parseFromBody<Requests.Auth.CreateSession>
-        |> fun t -> t.Validate()
+        |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
+        |> fun t -> t.ValidateLogin()
         |> function
         | Ok b -> b
         | Error e -> raise <| Errors.fromValidation e
 
     // TODO: Lookup user in database, validate their password with bcrypt
 
-    // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
-    let cookieExpiration = DateTimeOffset.UtcNow.AddYears 10
-    let cookie =
-        { email = body.username
-          created = Date.toUnixTimestamp <| DateTime.UtcNow.AddDays -90.
-          hashedPassword = "temp"
-          id = "abcd-1234" }
-        |> Jwt.encode Jwt.DefaultExpiration
-        |> HttpCookie.createKV Constants.CookieName
-        |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
-
     return!
         Successful.OK "{}"
         >=> Writers.setMimeType Json.MimeType
-        >=> Cookie.setCookie cookie
+        >=> Cookie.setCookie (createSessionCookie body)
         <| ctx
 }
 
@@ -41,6 +42,6 @@ let checkUserState = context <| fun ctx ->
 
 let routes = [
     POST >=> choose [
-        path "/api/v1/auth" >=> createSession
+        path "/api/v1/auth" >=> login
     ]
 ]

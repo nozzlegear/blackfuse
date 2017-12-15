@@ -1,4 +1,4 @@
-module Pages.Auth.Login
+module Pages.Auth.LoginOrRegister
 
 open Fable
 open Fable.Core
@@ -13,13 +13,20 @@ module C = Components
 module Mobx = Fable.Import.Mobx
 module MobxReact = Fable.Import.MobxReact
 
-let login () =
-    let rawData =
+type PageType =
+    | Register
+    | Login
+
+let login pageType _ =
+    let validation =
         { username = Mobx.get S.Form.username |> Option.defaultValue ""
           password = Mobx.get S.Form.password |> Option.defaultValue "" }
-        |> CreateSession.Validate
+        |> fun d ->
+            match pageType with
+            | Register -> LoginOrRegister.ValidateRegister d
+            | Login -> LoginOrRegister.ValidateLogin d
 
-    match rawData with
+    match validation with
     | Error e ->
         Validation.getMessage e
         |> Some
@@ -29,7 +36,10 @@ let login () =
         S.Form.updateError None
 
         promise {
-            let! result = Services.Auth.login data
+            let! result =
+                match pageType with
+                | Register -> Services.Auth.register data
+                | Login -> Services.Auth.login data
 
             match result with
             | Ok _ ->
@@ -50,7 +60,7 @@ let login () =
         }
         |> Promise.start
 
-let Page dict =
+let Page (pageType: PageType) dict =
     fun _ ->
         let footer =
             match Mobx.get S.Form.loading with
@@ -58,18 +68,32 @@ let Page dict =
                 R.progress [] []
             | false ->
                 R.div [] [
-                    R.button [P.ClassName "btn blue"; P.OnClick (ignore >> login)] [
-                        R.str "Sign In"
+                    R.button [P.ClassName "btn blue"; P.OnClick (ignore >> login pageType)] [
+                        match pageType with
+                        | Register -> "Register Account"
+                        | Login -> "Sign In"
+                        |> R.str
                     ]
-                    R.str "No account? "
-                    Router.link "/signup" [] [R.str "Create one!"]
+
+                    match pageType with
+                    | Register ->
+                        [
+                            R.str "Already have an account? "
+                            Router.link "/auth/login" [] [R.str "Sign in!"]
+                        ]
+                    | Login ->
+                        [
+                            R.str "No account? "
+                            Router.link "/auth/register" [] [R.str "Create one!"]
+                        ]
+                    |> R.div []
                 ]
         let usernameOrEmpty = Mobx.get S.Form.username |> Option.defaultValue ""
         let passwordOrEmpty = Mobx.get S.Form.password |> Option.defaultValue ""
         let getValue = Utils.getValueFromEvent
 
         C.Box
-        <| "Login"
+        <| match pageType with | Login -> "Login." | Register -> "Create an account."
         <| Some "Enter your username and password to log in to your account."
         <| Mobx.get S.Form.error
         <| Some footer
