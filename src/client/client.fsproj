@@ -21,14 +21,15 @@
     <Compile Include="import/Fable.Import.JsCookie.fs" />
     <Compile Include="import/Fable.Import.JwtSimple.fs" />
     <Compile Include="import/Fable.Import.ReactWinPivot.fs" />
+    <Compile Include="import/Fable.Import.ImageBlobber.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Services.fs" />
     <Compile Include="stores/Auth.fs" />
     <Compile Include="stores/Nav.fs" />
+    <Compile Include="stores/Personalization.fs" />
     <Compile Include="Router.fs" />
     <Compile Include="Components.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />
-    <Compile Include="pages/home/SelectProducts.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

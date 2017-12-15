@@ -37,11 +37,12 @@ type SessionTokenResponse =
 
 module Requests =
   module Auth =
-    type CreateSession =
+    type LoginOrRegister =
       { username: string
         password: string }
+
       with
-      member x.Validate () =
+      member x.ValidateLogin () =
         fast <| fun t ->
           { username =
               t.Test "Username" x.username
@@ -51,5 +52,22 @@ module Requests =
               t.Test "Password" x.password
               |> t.NotBlank "cannot be empty"
               |> t.End }
-      static member Validate (data: CreateSession) =
-        data.Validate()
+
+      static member ValidateLogin (data: LoginOrRegister) =
+        data.ValidateLogin()
+
+      member x.ValidateRegister () =
+        fast <| fun t ->
+          { username =
+              t.Test "Username" x.username
+              |> t.NotBlank "cannot be empty"
+              |> t.IsMail "must be a valid email address"
+              |> t.End
+            password =
+              t.Test "Password" x.password
+              |> t.NotBlank "cannot be empty"
+              |> t.MinLen 6 "must be at least 6 characters long"
+              |> t.MaxLen 100 "must be less than 100 characters long"
+              |> t.End }
+      static member ValidateRegister (data: LoginOrRegister) =
+        data.ValidateRegister()

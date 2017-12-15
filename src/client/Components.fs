@@ -56,6 +56,17 @@ let Checkbox label value onChange =
         ]
     ]
 
+let TextareaWithLabel label rows value onChange =
+    ControlGroup label <| R.textarea [P.Value value; P.Rows rows; P.OnChange (Utils.getValueFromEvent >> onChange)] []
+
+let Instruction text =
+    R.div [P.ClassName "instruction"] [
+        R.div [P.ClassName "icon"] [
+            ReactIcons.descriptionIcon [ReactIcons.Size 35; ReactIcons.Color "#fff"]
+        ]
+        R.p [] [R.str text]
+    ]
+
 /// Runs the given function after each React render cycle, whether mounting or updating.
 let AfterRender f =
     let func (el: Browser.Element) =
