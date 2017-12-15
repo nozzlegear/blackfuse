@@ -17,7 +17,7 @@ importSideEffects "./public/css/all.styl"
 
 let nav =
     let hamburger = Icon.hamburgerIcon [Icon.Size 25; Icon.Color "#fff"; Icon.ClassName "pointer"; Icon.OnClick (ignore >> NavStore.toggleNavIsOpen)]
-    Nav.navbar [Nav.Title "Testing this boi"; Nav.Background BrowserConstants.ThemeColor; Nav.LeftAction hamburger]
+    Nav.navbar [Nav.Title Constants.AppName; Nav.Background BrowserConstants.ThemeColor; Nav.LeftAction hamburger]
 
 let navMenu () =
     let link href text =
@@ -117,7 +117,7 @@ let appRoutes: Router.Route list =
             Router.route "/" DashboardPage
         ]
         Router.group withoutNav [
-            Router.route "/auth/login" Pages.Auth.Login.Page
+            Router.route "/auth/login" <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
         ]
         Router.routeWithGuard "/auth/logout" logout (fun _ -> R.noscript [] [])
     ]
