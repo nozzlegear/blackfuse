@@ -10,7 +10,7 @@ let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
     // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
     let cookieExpiration = DateTimeOffset.UtcNow.AddYears 10
 
-    { email = data.username
+    { email = "temporary@your-shopify-store.com"
       created = Date.toUnixTimestamp <| DateTime.UtcNow.AddDays -90.
       hashedPassword = "temp"
       id = "abcd-1234" }
@@ -22,7 +22,7 @@ let login = request <| fun req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
-        |> fun t -> t.ValidateLogin()
+        |> fun t -> t.Validate()
         |> function
         | Ok b -> b
         | Error e -> raise <| Errors.fromValidation e

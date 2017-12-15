@@ -22,17 +22,13 @@ let logOut () = mobx.runInAction <| fun _ ->
     mobx.set token None
 
 module Form =
-    let username = mobx.boxedObservable<string option> None
-
-    let password = mobx.boxedObservable<string option> None
+    let domain = mobx.boxedObservable<string option> None
 
     let error = mobx.boxedObservable<string option> None
 
     let loading = mobx.boxedObservable<bool> false
 
-    let updateUsername username' = mobx.runInAction <| fun _ -> mobx.set username username'
-
-    let updatePassword password' = mobx.runInAction <| fun _ -> mobx.set password password'
+    let updateDomain domain' = mobx.runInAction <| fun _ -> mobx.set domain domain'
 
     let updateError error' = mobx.runInAction <| fun _ -> mobx.set error error'
 
@@ -40,7 +36,6 @@ module Form =
 
     let clearForm () = mobx.runInAction <| fun _ ->
         mobx.set error None
-        mobx.set username None
-        mobx.set password None
+        mobx.set domain None
         mobx.set loading false
 

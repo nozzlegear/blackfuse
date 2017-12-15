@@ -19,12 +19,8 @@ type PageType =
 
 let login pageType _ =
     let validation =
-        { username = Mobx.get S.Form.username |> Option.defaultValue ""
-          password = Mobx.get S.Form.password |> Option.defaultValue "" }
-        |> fun d ->
-            match pageType with
-            | Register -> LoginOrRegister.ValidateRegister d
-            | Login -> LoginOrRegister.ValidateLogin d
+        { domain = Mobx.get S.Form.domain |> Option.defaultValue "" }
+        |> fun d -> d.Validate()
 
     match validation with
     | Error e ->
@@ -70,39 +66,38 @@ let Page (pageType: PageType) dict =
                 R.div [] [
                     R.button [P.ClassName "btn blue"; P.OnClick (ignore >> login pageType)] [
                         match pageType with
-                        | Register -> "Register Account"
-                        | Login -> "Sign In"
+                        | Register -> "Connect Shopify Store"
+                        | Login -> "Authenticate With Shopify"
                         |> R.str
                     ]
 
                     match pageType with
                     | Register ->
                         [
-                            R.str "Already have an account? "
+                            R.str "Already have an account?"
                             Router.link "/auth/login" [] [R.str "Sign in!"]
                         ]
                     | Login ->
                         [
                             R.str "No account? "
-                            Router.link "/auth/register" [] [R.str "Create one!"]
+                            Router.link "/auth/register" [] [R.str "Get one!"]
                         ]
                     |> R.div []
                 ]
-        let usernameOrEmpty = Mobx.get S.Form.username |> Option.defaultValue ""
-        let passwordOrEmpty = Mobx.get S.Form.password |> Option.defaultValue ""
-        let getValue = Utils.getValueFromEvent
+        let description =
+            match pageType with
+            | Login -> sprintf "Enter your myshopify.com domain below to authenticate and sign in to your %s account." Constants.AppName
+            | Register -> sprintf "Enter your myshopify.com domain below to connect your Shopify store with %s." Constants.AppName
+        let domain = Mobx.get S.Form.domain |> Option.defaultValue ""
 
         C.Box
         <| match pageType with | Login -> "Login." | Register -> "Create an account."
-        <| Some "Enter your username and password to log in to your account."
+        <| Some description
         <| Mobx.get S.Form.error
         <| Some footer
         <| [
             R.form [] [
-                R.input [P.Type "text"; P.Value usernameOrEmpty; P.OnChange (getValue >> Some >> S.Form.updateUsername)]
-                |> C.ControlGroup "Username"
-                R.input [P.Type "password"; P.Value passwordOrEmpty; P.OnChange (getValue >> Some >> S.Form.updatePassword)]
-                |> C.ControlGroup "Password"
+                C.TextboxWithLabel "Your *.myshopify.com domain:" domain (Some >> S.Form.updateDomain)
             ]
         ]
     |> MobxReact.Observer

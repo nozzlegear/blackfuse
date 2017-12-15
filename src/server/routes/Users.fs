@@ -10,7 +10,7 @@ let register = request <| fun req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
-        |> fun t -> t.ValidateRegister()
+        |> fun t -> t.Validate()
         |> function
         | Ok b -> b
         | Error e -> raise <| Errors.fromValidation e

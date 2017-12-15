@@ -38,36 +38,15 @@ type SessionTokenResponse =
 module Requests =
   module Auth =
     type LoginOrRegister =
-      { username: string
-        password: string }
+      { domain: string }
 
       with
-      member x.ValidateLogin () =
+      member x.Validate () =
         fast <| fun t ->
-          { username =
-              t.Test "Username" x.username
-              |> t.NotBlank "cannot be empty"
-              |> t.End
-            password =
-              t.Test "Password" x.password
+          { domain =
+              t.Test "MyShopify Domain" x.domain
               |> t.NotBlank "cannot be empty"
               |> t.End }
 
-      static member ValidateLogin (data: LoginOrRegister) =
-        data.ValidateLogin()
-
-      member x.ValidateRegister () =
-        fast <| fun t ->
-          { username =
-              t.Test "Username" x.username
-              |> t.NotBlank "cannot be empty"
-              |> t.IsMail "must be a valid email address"
-              |> t.End
-            password =
-              t.Test "Password" x.password
-              |> t.NotBlank "cannot be empty"
-              |> t.MinLen 6 "must be at least 6 characters long"
-              |> t.MaxLen 100 "must be less than 100 characters long"
-              |> t.End }
-      static member ValidateRegister (data: LoginOrRegister) =
-        data.ValidateRegister()
+      static member Validate (data: LoginOrRegister) =
+        data.Validate()
