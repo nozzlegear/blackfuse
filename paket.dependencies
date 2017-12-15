@@ -16,6 +16,7 @@ nuget Fable.React
 clitool dotnet-fable
 nuget Fable.PowerPack
 nuget fable.validation
+nuget shopifysharp 4.7.1
 
 group Build
   source https://nuget.org/api/v2
