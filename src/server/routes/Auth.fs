@@ -5,6 +5,8 @@ open Domain
 open Suave
 open Filters
 open Operators
+open ShopifySharp
+open Errors
 
 let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
     // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
@@ -18,7 +20,7 @@ let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
     |> HttpCookie.createKV Constants.CookieName
     |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
 
-let login = request <| fun req ctx -> async {
+let getShopifyAuthUrl = request <| fun req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
@@ -26,6 +28,29 @@ let login = request <| fun req ctx -> async {
         |> function
         | Ok b -> b
         | Error e -> raise <| Errors.fromValidation e
+
+    let! isValidDomain = AuthorizationService.IsValidShopDomainAsync body.domain |> Async.AwaitTask
+
+    if not isValidDomain then
+        HttpException ("The domain you entered is not a valid Shopify shop's domain.", Status.UnprocessableEntity)
+        |> raise
+
+    // TODO: Merge the domain with the app id to construct a login url
+    return!
+        Successful.OK <| sprintf """{"url":"%s"}""" body.domain
+        >=> Writers.setMimeType Json.MimeType
+        <| ctx
+
+}
+
+let login = request <| fun req ctx -> async {
+    let body =
+        req.rawForm
+        |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
+        |> fun t -> t.Validate()
+        |> function
+        | Ok b -> b
+        | Error e -> raise <| fromValidation e
 
     // TODO: Lookup user in database, validate their password with bcrypt
 
@@ -43,5 +68,6 @@ let checkUserState = context <| fun ctx ->
 let routes = [
     POST >=> choose [
         path "/api/v1/auth" >=> login
+        path "/api/v1/auth/get-shopify-auth-url" >=> getShopifyAuthUrl
     ]
 ]
