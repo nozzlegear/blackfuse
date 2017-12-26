@@ -98,7 +98,7 @@ FinalTarget "KillProcess" (fun _ ->
 
 Target "Run" (fun _ ->
     let ipAddress = "localhost"
-    let port = 8080
+    let port = 8000
     let fable = async { runDotnet clientDir "fable yarn-run watch" }
     let dotnet = async { runDotnet serverDir "run" }
     let openBrowser = async {

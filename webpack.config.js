@@ -45,7 +45,8 @@ module.exports = {
             }
         },
         hot: true,
-        inline: true
+        inline: true,
+        port: 8000
     },
     plugins: filterPlugins([
         new webpack.DefinePlugin({
