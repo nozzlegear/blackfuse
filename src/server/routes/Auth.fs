@@ -20,7 +20,7 @@ let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
     |> HttpCookie.createKV Constants.CookieName
     |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
 
-let getShopifyAuthUrl = request <| fun req ctx -> async {
+let getShopifyOAuthUrl = request <| fun req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
@@ -35,12 +35,34 @@ let getShopifyAuthUrl = request <| fun req ctx -> async {
         HttpException ("The domain you entered is not a valid Shopify shop's domain.", Status.UnprocessableEntity)
         |> raise
 
-    // TODO: Merge the domain with the app id to construct a login url
+    let redirectUrl =
+        if not ServerConstants.isLive then
+            Utils.withPathAndProtocolBack "localhost:8000"
+        else
+            // Get the app's domain so we can combine it with the oauth redirect path but not have to hardcode localhost/live domain
+            match req.header("host") with
+            | Choice1Of2 h ->
+                // Make sure the uri has a protocol and host. In most cases the raw string does not have a protocol,
+                // and passing "localhost:3000" to a uribuilder makes it think there's no host either.
+                Utils.withPathAndProtocolBack h
+            | Choice2Of2 _ ->
+                Errors.HttpException("Unable to determine host URL.", Status.InternalServerError)
+                |> raise
+        <| ServerConstants.shopifyOauthRedirectPath
+
+    // Sending the user to the oauth url will let us onboard them if they haven't installed the app,
+    // and let us log them in if they have.
+    let oauthUrl =
+        AuthorizationService.BuildAuthorizationUrl(
+            ServerConstants.authScopes,
+            body.domain,
+            ServerConstants.shopifyApiKey,
+            redirectUrl.ToString())
+
     return!
-        Successful.OK <| sprintf """{"url":"%s"}""" body.domain
+        Successful.OK <| sprintf """{"url":"%s"}""" (oauthUrl.ToString())
         >=> Writers.setMimeType Json.MimeType
         <| ctx
-
 }
 
 let login = request <| fun req ctx -> async {
@@ -68,6 +90,6 @@ let checkUserState = context <| fun ctx ->
 let routes = [
     POST >=> choose [
         path "/api/v1/auth" >=> login
-        path "/api/v1/auth/get-shopify-auth-url" >=> getShopifyAuthUrl
+        path "/api/v1/auth/get-shopify-oauth-url" >=> getShopifyOAuthUrl
     ]
 ]

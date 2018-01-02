@@ -12,6 +12,7 @@
     <Compile Include="../shared/Domain.fs" />
     <Compile Include="../shared/Validation.fs" />
     <Compile Include="Constants.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Folder.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Errors.fs" />

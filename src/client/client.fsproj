@@ -26,7 +26,6 @@
     <Compile Include="Services.fs" />
     <Compile Include="stores/Auth.fs" />
     <Compile Include="stores/Nav.fs" />
-    <Compile Include="stores/Personalization.fs" />
     <Compile Include="Router.fs" />
     <Compile Include="Components.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />
