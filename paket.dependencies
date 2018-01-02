@@ -22,3 +22,4 @@ group Build
   source https://nuget.org/api/v2
   framework >= net461
   nuget FAKE
+  nuget dotenvfile

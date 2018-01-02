@@ -18,9 +18,6 @@ let private envVarDefault key defaultValue =
     match envVar key with
     | Some s -> s
     | None -> defaultValue
+let shopifySecretKey = envVarRequired "SHOPIFY_SECRET_KEY"
 
-let private varName = sprintf "%s_%s" (Constants.AppName.Replace(" ", "_").ToUpper())
-
-let shopifySecretKey = envVarRequired <| varName "SHOPIFY_SECRET_KEY"
-
-let shopifyApiKey = envVarRequired <| varName "SHOPIFY_PUBLIC_KEY"
+let shopifyApiKey = envVarRequired "SHOPIFY_PUBLIC_KEY"

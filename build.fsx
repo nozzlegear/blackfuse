@@ -1,6 +1,7 @@
 // Source for much of this build script: SAFE-Stack https://github.com/SAFE-Stack/SAFE-BookStore/blob/65bb1b9049ee6b6c32c457e8ed1d876e6b96796d/build.fsx
 
 #r @"packages/build/FAKE/tools/FakeLib.dll"
+#r @"packages/build/DotEnvFile/lib/net452/DotEnvFile.dll"
 // open Constants
 // #load @"./constants.fsx"
 
@@ -96,6 +97,14 @@ FinalTarget "KillProcess" (fun _ ->
     killAllCreatedProcesses ()
 )
 
+Target "LoadEnvironment" (fun _ ->
+    if File.Exists "./env.yml" then
+        printfn("Loading environment variables from env.yml.")
+
+        DotEnvFile.DotEnvFile.LoadFile "./env.yml"
+        |> DotEnvFile.DotEnvFile.InjectIntoEnvironment
+)
+
 Target "Run" (fun _ ->
     let ipAddress = "localhost"
     let port = 8000
@@ -119,6 +128,7 @@ Target "All" DoNothing
     // ==> "SyncConstants"
     ==> "Restore"
     ==> "All"
+    ==> "LoadEnvironment"
     ==> "Run"
 
 "All"
