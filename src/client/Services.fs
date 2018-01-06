@@ -62,12 +62,18 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
 
 module Auth =
     open Domain.Requests.Auth
-    let login (data: LoginOrRegister) =
-        Some data
-        |> sendRequest "/api/v1/auth" HttpMethod.POST
-        |> getResponse
+    let getShopifyOauthUrl (myShopifyDomain: string) =
+        let apiUrl = sprintf "/api/v1/auth/shopify-oauth?domain=%s" myShopifyDomain
 
-    let register (data: LoginOrRegister) =
+        sendRequest apiUrl HttpMethod.GET None
+        |> getResponse
+        |> Promise.map (fun r ->
+            match r with
+            | Ok s -> ofJson<GetShopifyOauthUrlResult> s |> Ok
+            | Error e -> Error e
+        )
+
+    let authenticate (data: 'T option) =
         Some data
-        |> sendRequest "/api/v1/users" HttpMethod.POST
+        |> sendRequest "/api/v1/auth/shopify-oauth" HttpMethod.POST
         |> getResponse

@@ -37,16 +37,19 @@ type SessionTokenResponse =
 
 module Requests =
   module Auth =
-    type LoginOrRegister =
-      { domain: string }
+    // type GetShopifyOauthUrl =
+    //   { domain: string }
 
-      with
-      member x.Validate () =
-        fast <| fun t ->
-          { domain =
-              t.Test "MyShopify Domain" x.domain
-              |> t.NotBlank "cannot be empty"
-              |> t.End }
+    //   with
+    //   member x.Validate () =
+    //     fast <| fun t ->
+    //       { domain =
+    //           t.Test "MyShopify Domain" x.domain
+    //           |> t.NotBlank "cannot be empty"
+    //           |> t.End }
 
-      static member Validate (data: LoginOrRegister) =
-        data.Validate()
+    //   static member Validate (data: GetShopifyOauthUrl) =
+    //     data.Validate()
+
+    type GetShopifyOauthUrlResult =
+      { url: string }

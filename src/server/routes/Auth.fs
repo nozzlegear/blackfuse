@@ -8,28 +8,23 @@ open Operators
 open ShopifySharp
 open Errors
 
-let createSessionCookie (data: Requests.Auth.LoginOrRegister) =
+let createSessionCookie (user: Domain.User) =
     // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
     let cookieExpiration = DateTimeOffset.UtcNow.AddYears 10
 
-    { email = "temporary@your-shopify-store.com"
-      created = Date.toUnixTimestamp <| DateTime.UtcNow.AddDays -90.
-      hashedPassword = "temp"
-      id = "abcd-1234" }
+    user
     |> Jwt.encode Jwt.DefaultExpiration
     |> HttpCookie.createKV Constants.CookieName
     |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
 
 let getShopifyOAuthUrl = request <| fun req ctx -> async {
-    let body =
-        req.rawForm
-        |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
-        |> fun t -> t.Validate()
-        |> function
-        | Ok b -> b
-        | Error e -> raise <| Errors.fromValidation e
+    let queryKey = "domain"
+    let domain =
+        match req.queryParam queryKey with
+        | Choice1Of2 s -> s
+        | Choice2Of2 _ -> raise <| HttpException(sprintf "Missing querystring key %s." queryKey, Status.UnprocessableEntity)
 
-    let! isValidDomain = AuthorizationService.IsValidShopDomainAsync body.domain |> Async.AwaitTask
+    let! isValidDomain = AuthorizationService.IsValidShopDomainAsync domain |> Async.AwaitTask
 
     if not isValidDomain then
         HttpException ("The domain you entered is not a valid Shopify shop's domain.", Status.UnprocessableEntity)
@@ -55,7 +50,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
     let oauthUrl =
         AuthorizationService.BuildAuthorizationUrl(
             ServerConstants.authScopes,
-            body.domain,
+            domain,
             ServerConstants.shopifyApiKey,
             redirectUrl.ToString())
 
@@ -65,22 +60,25 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
         <| ctx
 }
 
-let login = request <| fun req ctx -> async {
-    let body =
-        req.rawForm
-        |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
-        |> fun t -> t.Validate()
-        |> function
-        | Ok b -> b
-        | Error e -> raise <| fromValidation e
+let shopifyLoginOrRegister = request <| fun req ctx -> async {
+    // let body =
+    //     req.rawForm
+    //     |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
+    //     |> fun t -> t.Validate()
+    //     |> function
+    //     | Ok b -> b
+    //     | Error e -> raise <| fromValidation e
 
     // TODO: Lookup user in database, validate their password with bcrypt
 
-    return!
-        Successful.OK "{}"
-        >=> Writers.setMimeType Json.MimeType
-        >=> Cookie.setCookie (createSessionCookie body)
-        <| ctx
+    NotImplementedException () |> raise
+
+    // return!
+    //     Successful.OK "{}"
+    //     >=> Writers.setMimeType Json.MimeType
+    //     >=> Cookie.setCookie (createSessionCookie body)
+    //     <| ctx
+    return! Successful.OK "{}" <| ctx
 }
 
 let checkUserState = context <| fun ctx ->
@@ -89,7 +87,9 @@ let checkUserState = context <| fun ctx ->
 
 let routes = [
     POST >=> choose [
-        path "/api/v1/auth" >=> login
-        path "/api/v1/auth/get-shopify-oauth-url" >=> getShopifyOAuthUrl
+        path "/api/v1/auth/shopify-oauth" >=> shopifyLoginOrRegister
+    ]
+    GET >=> choose [
+        path "/api/v1/auth/shopify-oauth" >=> getShopifyOAuthUrl
     ]
 ]

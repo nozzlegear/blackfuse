@@ -18,41 +18,36 @@ type PageType =
     | Login
 
 let login pageType _ =
-    let validation =
-        { domain = Mobx.get S.Form.domain |> Option.defaultValue "" }
-        |> fun d -> d.Validate()
-
-    match validation with
-    | Error e ->
-        Validation.getMessage e
-        |> Some
+    match Mobx.get S.Form.domain |> Option.defaultValue "" with
+    | null
+    | "" ->
+        Some "MyShopify domain cannot be empty."
         |> Mobx.set S.Form.error
-    | Ok data ->
+    | domain ->
         S.Form.updateLoading true
         S.Form.updateError None
 
         promise {
-            let! result =
-                match pageType with
-                | Register -> Services.Auth.register data
-                | Login -> Services.Auth.login data
+            let! result = Services.Auth.getShopifyOauthUrl domain
 
             match result with
-            | Ok _ ->
-                match JsCookie.get Constants.CookieName with
-                | Some token ->
-                    S.Form.clearForm()
-                    S.logIn token
-                    Router.push "/"
-                | None ->
-                    "Error parsing authorization cookie. Please try again."
-                    |> Some
-                    |> S.Form.updateError
+            | Ok r ->
+                // Redirect to the Shopify OAuth page which will log the user in or register them.
+                Browser.window.location.href <- r.url
+
+                // match JsCookie.get Constants.CookieName with
+                // | Some token ->
+                //     S.Form.clearForm()
+                //     S.logIn token
+                //     Router.push "/"
+                // | None ->
+                //     "Error parsing authorization cookie. Please try again."
+                //     |> Some
+                //     |> S.Form.updateError
             | Error e ->
                 Fable.Import.Browser.console.error e
                 S.Form.updateError <| Some e.message
-
-            S.Form.updateLoading false
+                S.Form.updateLoading false
         }
         |> Promise.start
 
