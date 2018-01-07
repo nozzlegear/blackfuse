@@ -9,6 +9,7 @@
     <Compile Include="../shared/Constants.fs" />
     <Compile Include="../shared/Domain.fs" />
     <Compile Include="../shared/Validation.fs" />
+    <Compile Include="../shared/Paths.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="import/Fable.Import.ReactMaterialNavbar.fs" />
     <Compile Include="import/Fable.Import.ReactIcons.fs" />
@@ -29,6 +30,7 @@
     <Compile Include="Router.fs" />
     <Compile Include="Components.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />
+    <Compile Include="pages/auth/CompleteOauth.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

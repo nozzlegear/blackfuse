@@ -28,8 +28,6 @@ let shopifySecretKey = envVarRequired "SHOPIFY_SECRET_KEY"
 
 let shopifyApiKey = envVarRequired "SHOPIFY_PUBLIC_KEY"
 
-let shopifyOauthRedirectPath = "/shopify/oauth"
-
 let shopifyChargeRedirectPath = "/shopify/activate-charge"
 
 let authScopes: ShopifySharp.Enums.AuthorizationScope list =

@@ -63,7 +63,7 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
 module Auth =
     open Domain.Requests.Auth
     let getShopifyOauthUrl (myShopifyDomain: string) =
-        let apiUrl = sprintf "/api/v1/auth/shopify-oauth?domain=%s" myShopifyDomain
+        let apiUrl = sprintf "/api/v1/auth/oauth/shopify?domain=%s" myShopifyDomain
 
         sendRequest apiUrl HttpMethod.GET None
         |> getResponse
@@ -73,7 +73,8 @@ module Auth =
             | Error e -> Error e
         )
 
-    let authenticate (data: 'T option) =
-        Some data
-        |> sendRequest "/api/v1/auth/shopify-oauth" HttpMethod.POST
+    let completeOauth(rawQueryString: string) =
+        { rawQueryString = rawQueryString }
+        |> Some
+        |> sendRequest "/api/v1/auth/oauth/shopify" HttpMethod.POST
         |> getResponse

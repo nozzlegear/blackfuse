@@ -39,3 +39,27 @@ module Form =
         mobx.set domain None
         mobx.set loading false
 
+module OAuth =
+    let loading = mobx.boxedObservable<bool> false
+
+    /// Whether the user has attempted to complete oauth at least once.
+    let hasAttempted = mobx.boxedObservable<bool> false
+
+    let error = mobx.boxedObservable<string option> None
+
+    /// Call when the user is attempting to complete OAuth.
+    let beginningAttempt () = mobx.runInAction <| fun _ ->
+        mobx.set hasAttempted true
+        mobx.set loading true
+        mobx.set error None
+
+    /// Call when the user has attempted to complete OAuth but failed. Will set the error message, plus set loading to false.
+    let receivedError msg = mobx.runInAction <| fun _ ->
+        mobx.set loading false
+        mobx.set error (Some msg)
+
+    /// Call when the user is navigating away from the page.
+    let reset () = mobx.runInAction <| fun _ ->
+        mobx.set hasAttempted false
+        mobx.set loading false
+        mobx.set error None

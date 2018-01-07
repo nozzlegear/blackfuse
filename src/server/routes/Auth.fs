@@ -43,7 +43,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
             | Choice2Of2 _ ->
                 Errors.HttpException("Unable to determine host URL.", Status.InternalServerError)
                 |> raise
-        <| ServerConstants.shopifyOauthRedirectPath
+        <| Paths.Auth.completeOAuth
 
     // Sending the user to the oauth url will let us onboard them if they haven't installed the app,
     // and let us log them in if they have.
@@ -61,24 +61,51 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
 }
 
 let shopifyLoginOrRegister = request <| fun req ctx -> async {
-    // let body =
-    //     req.rawForm
-    //     |> Json.parseFromBody<Requests.Auth.LoginOrRegister>
-    //     |> fun t -> t.Validate()
-    //     |> function
-    //     | Ok b -> b
-    //     | Error e -> raise <| fromValidation e
+    let body =
+        req.rawForm
+        |> Json.parseFromBody<Requests.Auth.CompleteShopifyOauth>
+        |> fun t -> t.Validate()
+        |> function
+        | Ok b -> b
+        | Error e -> raise <| fromValidation e
 
-    // TODO: Lookup user in database, validate their password with bcrypt
+    if not <| AuthorizationService.IsAuthenticRequest(body.rawQueryString, ServerConstants.shopifySecretKey) then
+        raise <| HttpException("Request did not pass Shopify's validation scheme.", Status.Forbidden)
 
-    NotImplementedException () |> raise
+    // TODO: Lookup user in database to see if we're creating a new user or logging in an old one.
+    let qs =
+        AuthorizationService.ParseRawQuerystring(body.rawQueryString) :> seq<_>
+        |> Seq.map (|KeyValue|)
+        |> Map.ofSeq
+    let code = qs.Item "code"
+    let shopUrl = qs.Item "shop"
 
-    // return!
-    //     Successful.OK "{}"
-    //     >=> Writers.setMimeType Json.MimeType
-    //     >=> Cookie.setCookie (createSessionCookie body)
-    //     <| ctx
-    return! Successful.OK "{}" <| ctx
+    let! accessToken =
+        AuthorizationService.Authorize(
+            code,
+            shopUrl,
+            ServerConstants.shopifyApiKey,
+            ServerConstants.shopifySecretKey)
+        |> Async.AwaitTask
+    let! shop =
+        ShopService(shopUrl, accessToken).GetAsync()
+        |> Async.AwaitTask
+
+    let user: Domain.User =
+        { shopifyAccessToken = accessToken
+          created = Date.toUnixTimestamp DateTime.UtcNow
+          email = if not <| isNull shop.CustomerEmail then shop.CustomerEmail else shop.Email
+          hashedPassword = "TEMPORARY PASS"
+          id = "rando_id"
+          myShopifyUrl = shopUrl
+          shopName = shop.Name
+          shopId = shop.Id.Value }
+
+    return!
+        Successful.OK "{}"
+        >=> Writers.setMimeType Json.MimeType
+        >=> Cookie.setCookie (createSessionCookie user)
+        <| ctx
 }
 
 let checkUserState = context <| fun ctx ->
@@ -87,9 +114,9 @@ let checkUserState = context <| fun ctx ->
 
 let routes = [
     POST >=> choose [
-        path "/api/v1/auth/shopify-oauth" >=> shopifyLoginOrRegister
+        path "/api/v1/auth/oauth/shopify" >=> shopifyLoginOrRegister
     ]
     GET >=> choose [
-        path "/api/v1/auth/shopify-oauth" >=> getShopifyOAuthUrl
+        path "/api/v1/auth/oauth/shopify" >=> getShopifyOAuthUrl
     ]
 ]

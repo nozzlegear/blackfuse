@@ -30,7 +30,7 @@ let navMenu () =
 
     R.div [] [
         R.menu [ClassName "nav-menu"] [
-            link "/" "Open Orders"
+            link Paths.home "Open Orders"
             link "#" "Closed Orders"
             link "#" "Tracking Widget"
             link "#" "Automation Rules"
@@ -40,8 +40,8 @@ let navMenu () =
             link "#" "My Stages"
             linebreak
             match Mobx.get AuthStore.isAuthenticated with
-            | true -> "/auth/logout", "Sign out"
-            | false -> "/auth/login", "Sign in"
+            | true -> Paths.Auth.logout, "Sign out"
+            | false -> Paths.Auth.login, "Sign in"
             |> fun (path, text) -> link path text
         ]
     ]
@@ -95,7 +95,7 @@ let DashboardPage dict =
     R.div [] [
         dialog ()
         R.h1 [] [
-            R.str <| sprintf "Hello %s. You're currently logged in." session.email
+            R.str <| sprintf "Hello %s. You're currently logged in. Your shop is %s at %s." session.email session.shopName session.myShopifyUrl
         ]
         R.str "You're on the dashboard page."
         R.button [Type "button"; OnClick (ignore >> NavStore.openDialog)] [
@@ -107,19 +107,21 @@ let appRoutes: Router.Route list =
     let requireAuth _ =
         match Mobx.get Stores.Auth.isAuthenticated with
         | true -> None
-        | false -> Some "/auth/login"
+        | false -> Some Paths.Auth.login
     let logout _ =
         Stores.Auth.logOut()
-        Some "/auth/login"
+        Some Paths.Auth.login
 
     [
         Router.groupWithGuard withNav requireAuth [
-            Router.route "/" DashboardPage
+            Router.route Paths.home DashboardPage
         ]
         Router.group withoutNav [
-            Router.route "/auth/login" <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
+            Router.route Paths.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
+            Router.route Paths.Auth.register <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Register
+            Router.route Paths.Auth.completeOAuth <| Pages.Auth.CompleteOauth.Page
         ]
-        Router.routeWithGuard "/auth/logout" logout (fun _ -> R.noscript [] [])
+        Router.routeWithGuard Paths.Auth.logout logout (fun _ -> R.noscript [] [])
     ]
 
 let notFoundPage _ =
@@ -135,7 +137,7 @@ let notFoundPage _ =
                         R.str "Sorry about that, but the page you are looking for doesn't exist."
                     ]
                     R.div [Id "rescue-button-container"] [
-                        Router.link "/" [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
+                        Router.link Paths.home [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
                     ]
                 ]
             ]
