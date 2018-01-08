@@ -110,6 +110,7 @@ let appRoutes: Router.Route list =
         | false -> Some Paths.Auth.login
     let logout _ =
         Stores.Auth.logOut()
+        JsCookie.remove Constants.CookieName
         Some Paths.Auth.login
 
     [
