@@ -65,7 +65,7 @@ let userPropsToMap (user: Domain.User): Map<string, obj> =
 
 let withoutIdProp = Map.filter (fun key _ -> key <> "id")
 
-let getUser (id: string): Async<Domain.User option> = async {
+let getUserById (id: string): Async<Domain.User option> = async {
     use conn = new NpgsqlConnection(connString)
 
     let sql = "SELECT * FROM Users WHERE id = @id"
@@ -76,8 +76,35 @@ let getUser (id: string): Async<Domain.User option> = async {
         |> createCommand conn sql
         |> executeQuery
 
+    let! readable =
+        reader.ReadAsync()
+        |> Async.AwaitTask;
+
     return
-        if not reader.HasRows || not <| reader.Read() then
+        if not reader.HasRows || not readable then
+            None
+        else
+            mapFieldNamesToColumns reader
+            |> userPropsFromMap
+            |> Some
+}
+
+let getUserByShopId (id: int64): Async<Domain.User option> = async {
+    use conn = new NpgsqlConnection(connString)
+    let sql = "SELECT * From Users WHERE shopId = @shopId"
+
+    use! reader =
+        Map.ofList ["shopId", id]
+        |> Some
+        |> createCommand conn sql
+        |> executeQuery
+
+    let! readable =
+        reader.ReadAsync()
+        |> Async.AwaitTask;
+
+    return
+        if not reader.HasRows || not readable then
             None
         else
             mapFieldNamesToColumns reader
