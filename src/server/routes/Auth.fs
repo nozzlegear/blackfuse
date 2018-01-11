@@ -72,13 +72,21 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
     if not <| AuthorizationService.IsAuthenticRequest(body.rawQueryString, ServerConstants.shopifySecretKey) then
         raise <| HttpException("Request did not pass Shopify's validation scheme.", Status.Forbidden)
 
-    // TODO: Lookup user in database to see if we're creating a new user or logging in an old one.
     let qs =
         AuthorizationService.ParseRawQuerystring(body.rawQueryString) :> seq<_>
         |> Seq.map (|KeyValue|)
         |> Map.ofSeq
     let code = qs.Item "code"
     let shopUrl = qs.Item "shop"
+    let shopId =
+        if true then
+            raise <| NotImplementedException("TODO: Check the querystring to see if shop id exists.")
+        else
+            qs.Item "shopid" |> int64
+
+    // TODO: Lookup user in database to see if we're creating a new user or logging in an old one.
+    let! dbUser = Database.getUserByShopId shopId
+
 
     let! accessToken =
         AuthorizationService.Authorize(
