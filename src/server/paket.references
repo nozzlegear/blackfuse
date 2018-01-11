@@ -7,3 +7,4 @@ status
 newtonsoft.json
 fable.validation
 shopifysharp
+npgsql

@@ -17,6 +17,7 @@
     <Compile Include="Folder.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Errors.fs" />
+    <Compile Include="Database.fs" />
     <Compile Include="Jwt.fs" />
     <Compile Include="Filters.fs" />
     <Compile Include="routes/Auth.fs" />

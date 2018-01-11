@@ -17,6 +17,8 @@ clitool dotnet-fable
 nuget Fable.PowerPack
 nuget fable.validation
 nuget shopifysharp
+nuget npgsql
+nuget System.Threading.Tasks.Extensions
 
 group Build
   source https://nuget.org/api/v2
