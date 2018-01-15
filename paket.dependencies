@@ -19,6 +19,7 @@ nuget fable.validation
 nuget shopifysharp
 nuget npgsql
 nuget System.Threading.Tasks.Extensions
+nuget npgsql.fsharp
 
 group Build
   source https://nuget.org/api/v2

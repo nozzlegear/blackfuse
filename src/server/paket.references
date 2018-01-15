@@ -8,3 +8,4 @@ newtonsoft.json
 fable.validation
 shopifysharp
 npgsql
+npgsql.fsharp

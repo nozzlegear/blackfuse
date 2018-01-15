@@ -1,124 +1,82 @@
 module Database
 
-open Npgsql
+open Npgsql.FSharp
+open Domain
 
-let connString = ""
+let connString = ServerConstants.databaseConnectionString
 
 type ListOrder =
     | Descending of string
     | Ascending of string
 
-let createCommand connection sqlText (cmdParams: Map<string, _> option) =
-    let cmd = new NpgsqlCommand(sqlText, connection)
-
-    match cmdParams with
-    | Some cmdParams ->
-        cmdParams
-        |> Map.iter (fun key value -> cmd.Parameters.AddWithValue(key, value) |> ignore)
-    | None -> ()
-
-    cmd
-
-let executeInsertOrUpdate (cmd: NpgsqlCommand) =
-    cmd.ExecuteNonQueryAsync()
-    |> Async.AwaitTask
-
-let executeQuery (cmd: NpgsqlCommand) =
-    cmd.ExecuteReaderAsync()
-    |> Async.AwaitTask
-
-let mapFieldNamesToColumns (reader: System.Data.Common.DbDataReader) =
-    let keysAndColumns: (string * obj) seq = seq {
-        for i = 0 to reader.FieldCount - 1 do
-            let name = reader.GetName i
-            let value = reader.GetValue i
-
-            yield (name, value)
-    }
-
-    Map.ofSeq keysAndColumns
-
-let getColumn<'T> key (map: Map<string, obj>) =
-    let value = Map.find key map
-
-    value :?> 'T
-
-let userPropsFromMap (m: Map<string, obj>): Domain.User =
-    { id = getColumn<string> "id" m
-      email = getColumn<string> "email" m
-      created = getColumn<int64> "created" m
-      hashedPassword = getColumn<string> "hashedPassword" m
-      shopifyAccessToken = getColumn<string> "shopifyAccessToken" m
-      myShopifyUrl = getColumn<string> "myShopifyUrl" m
-      shopId = getColumn<int64> "shopId" m
-      shopName = getColumn<string> "shopName" m }
-
-let userPropsToMap (user: Domain.User): Map<string, obj> =
-    Map.empty<string, obj>
-    |> Map.add "email" (user.email :> obj)
-    |> Map.add "created" (user.created :> obj)
-    |> Map.add "hashedPassword" (user.hashedPassword :> obj)
-    |> Map.add "shopifyAccessToken" (user.shopifyAccessToken :> obj)
-    |> Map.add "myShopifyUrl" (user.myShopifyUrl :> obj)
-    |> Map.add "shopId" (user.shopId :> obj)
-    |> Map.add "shopName" (user.shopName :> obj)
-
-let withoutIdProp = Map.filter (fun key _ -> key <> "id")
-
-let getUserById (id: string): Async<Domain.User option> = async {
-    use conn = new NpgsqlConnection(connString)
-
-    let sql = "SELECT * FROM Users WHERE id = @id"
-
-    use! reader =
-        Map.ofList ["id", id]
+let toUserOption: SqlRow -> Domain.User option =
+    function
+    | [ "id", Sql.Int id
+        "email", Sql.String email
+        "created", Sql.Long created
+        "hashedPassword", Sql.String password
+        "shopifyAccessToken", Sql.String token
+        "myShopifyUrl", Sql.String myShopifyUrl
+        "shopId", Sql.Long shopId
+        "shopName", Sql.String shopName ] ->
+        { id = id
+          email = email
+          created = created
+          hashedPassword = password
+          shopifyAccessToken = token
+          myShopifyUrl = myShopifyUrl
+          shopId = shopId
+          shopName = shopName }
         |> Some
-        |> createCommand conn sql
-        |> executeQuery
+    | _ -> None
 
-    let! readable =
-        reader.ReadAsync()
-        |> Async.AwaitTask;
+let paramsFromUser (user: Domain.User) =
+    [
+        "id", Sql.Int user.id
+        "email", Sql.String user.email
+        "created", Sql.Long user.created
+        "hashedPassword", Sql.String user.hashedPassword
+        "shopifyAccessToken", Sql.String user.shopifyAccessToken
+        "myShopifyUrl", Sql.String user.myShopifyUrl
+        "shopId", Sql.Long user.shopId
+        "shopName", Sql.String user.shopName
+    ]
+
+let withoutIdProp = List.filter (fun (key, _) -> key <> "id")
+
+let getUserById (id: int): Async<Domain.User option> = async {
+    let! result =
+        connString
+        |> Sql.connect
+        |> Sql.query "SELECT * FROM Users WHERE id = @id"
+        |> Sql.parameters ["id", Sql.Int id]
+        |> Sql.executeTableAsync
 
     return
-        if not reader.HasRows || not readable then
-            None
-        else
-            mapFieldNamesToColumns reader
-            |> userPropsFromMap
-            |> Some
+        result
+        |> Sql.mapEachRow toUserOption
+        |> Seq.tryHead
 }
 
 let getUserByShopId (id: int64): Async<Domain.User option> = async {
-    use conn = new NpgsqlConnection(connString)
-    let sql = "SELECT * From Users WHERE shopId = @shopId"
-
-    use! reader =
-        Map.ofList ["shopId", id]
-        |> Some
-        |> createCommand conn sql
-        |> executeQuery
-
-    let! readable =
-        reader.ReadAsync()
-        |> Async.AwaitTask;
+    let! result =
+        connString
+        |> Sql.connect
+        |> Sql.query "SELECT * FROM Users WHERE shopId = @shopId"
+        |> Sql.parameters ["shopId", Sql.Long id]
+        |> Sql.executeTableAsync
 
     return
-        if not reader.HasRows || not readable then
-            None
-        else
-            mapFieldNamesToColumns reader
-            |> userPropsFromMap
-            |> Some
+        result
+        |> Sql.mapEachRow toUserOption
+        |> Seq.tryHead
 }
 
-let listUsers (order: ListOrder option) (limit: int option): Async<Domain.User seq> = async {
-    use conn = new NpgsqlConnection(connString)
-
+let listUsers (order: ListOrder option) (limit: int option) = async {
     let limitSql =
-        match limit with
-        | Some _ -> "LIMIT @limit"
-        | None -> ""
+        limit
+        |> Option.map (fun _ -> "LIMIT @limit")
+        |> Option.defaultValue ""
 
     let orderBySql =
         match order with
@@ -129,57 +87,52 @@ let listUsers (order: ListOrder option) (limit: int option): Async<Domain.User s
 
     let sql = sprintf "SELECT * FROM Users %s %s" limitSql orderBySql
 
-    use! reader =
-        match limit with
-        | Some l -> ["limit", l] |> Map.ofList |> Some
-        | None -> None
-        |> createCommand conn sql
-        |> executeQuery
+    let! result =
+        connString
+        |> Sql.connect
+        |> Sql.query sql
+        |> fun query -> match limit with | Some l -> Sql.parameters ["limit", Sql.Int l] query | None -> query
+        |> Sql.executeTableAsync
 
-    let users = seq {
-        while reader.Read() do
-            let user =
-                mapFieldNamesToColumns reader
-                |> userPropsFromMap
-
-            yield user
-    }
-
-    return users
+    return
+        result
+        |> Sql.mapEachRow toUserOption
 }
 
 let createUser (user: Domain.User) =
-    use conn = new NpgsqlConnection(connString)
-    let userMap =
-        userPropsToMap user
+    let sqlParams =
+        paramsFromUser user
         |> withoutIdProp
     let fields =
-        userMap
-        |> Seq.map (fun kvp -> kvp.Key)
+        sqlParams
+        |> Seq.map (fun (key, _) -> key)
         |> String.concat ", "
     let values =
-        userMap
-        |> Seq.map (fun kvp -> sprintf "@%s" kvp.Key)
+        sqlParams
+        |> Seq.map (fun (key, _) -> sprintf "@%s" key)
         |> String.concat ", "
+    let sql = sprintf "INSERT INTO Users FIELDS (%s) VALUES (%s)" fields values
 
-    let text = sprintf "INSERT INTO Users FIELDS (%s) VALUES (%s)" fields values
+    connString
+    |> Sql.connect
+    |> Sql.query sql
+    |> Sql.parameters sqlParams
+    |> Sql.executeNonQuerySafeAsync
 
-    Some userMap
-    |> createCommand conn text
-    |> executeInsertOrUpdate
-
-let updateUser (id: string) (user: Domain.User) =
-    use conn = new NpgsqlConnection(connString)
-    let userMap = userPropsToMap user
-    let columnSql =
-        userMap
+let updateUser (id: int) (user: Domain.User) =
+    let sqlParams =
+        paramsFromUser user
         |> withoutIdProp
-        |> Seq.map (fun kvp -> sprintf "%s = @%s" kvp.Key kvp.Key)
+    let sql =
+        sqlParams
+        |> withoutIdProp
+        |> Seq.map (fun (key, _) -> sprintf "%s = @%s" key key)
         |> String.concat ", "
         |> sprintf "UPDATE Users SET %s WHERE id = @id"
 
-    userMap
-    |> Map.add "id" (id :> obj) // Use the id passed to the function to ensure we get the intended one.
-    |> Some
-    |> createCommand conn columnSql
-    |> executeInsertOrUpdate
+    connString
+    |> Sql.connect
+    |> Sql.query sql
+    // Use the id passed to the function to ensure we get the intended one
+    |> Sql.parameters (sqlParams@["id", Sql.Int id])
+    |> Sql.executeNonQuerySafeAsync

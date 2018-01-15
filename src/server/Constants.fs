@@ -35,3 +35,5 @@ let authScopes: ShopifySharp.Enums.AuthorizationScope list =
         ShopifySharp.Enums.AuthorizationScope.ReadOrders
         ShopifySharp.Enums.AuthorizationScope.WriteOrders
     ]
+
+let databaseConnectionString = envVarRequired "DATABASE_CONNECTION_STRING"

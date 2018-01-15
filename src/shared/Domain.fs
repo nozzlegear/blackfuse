@@ -8,7 +8,7 @@ type ErrorResponse =
       message: string }
 
 type User =
-  { id: string
+  { id: int
     email: string
     /// The date the user was created, in unix seconds (not JS milliseconds).
     created: int64
