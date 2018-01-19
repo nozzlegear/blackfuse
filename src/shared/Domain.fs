@@ -12,10 +12,8 @@ type User = {
   id: string
   /// A unique identifier used by CouchDB to version this record.
   rev: string
-  email: string
   /// The date the user was created, in unix seconds (not JS milliseconds).
   created: int64
-  hashedPassword: string
   shopifyAccessToken: string
   myShopifyUrl: string
   shopId: int64
@@ -26,7 +24,6 @@ type User = {
 type SessionToken =
   { id: string
     rev: string
-    email: string
     /// The date the user was created, in unix seconds (not JS milliseconds).
     created: int64
     myShopifyUrl: string
@@ -38,7 +35,6 @@ type SessionToken =
   static member FromUser exp (user: User) =
     { id = user.id
       rev = user.rev
-      email = user.email
       myShopifyUrl = user.myShopifyUrl
       shopId = user.shopId
       shopName = user.shopName

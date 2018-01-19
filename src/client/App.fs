@@ -95,7 +95,7 @@ let DashboardPage dict =
     R.div [] [
         dialog ()
         R.h1 [] [
-            R.str <| sprintf "Hello %s. You're currently logged in. Your shop is %s at %s." session.email session.shopName session.myShopifyUrl
+            R.str <| sprintf "Hello. You're currently logged in. Your shop is %s at %s." session.shopName session.myShopifyUrl
         ]
         R.str "You're on the dashboard page."
         R.button [Type "button"; OnClick (ignore >> NavStore.openDialog)] [
