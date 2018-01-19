@@ -1,11 +1,9 @@
 Suave
 Fable.JsonConverter
 jose-jwt
-ILLink.Tasks
 FSharp.Core
 status
 newtonsoft.json
 fable.validation
 shopifysharp
-npgsql
-npgsql.fsharp
+davenport.fsharp

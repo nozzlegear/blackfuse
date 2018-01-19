@@ -1,15 +1,13 @@
-framework >= netstandard1.0
 source https://www.nuget.org/api/v2
-source https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
-storage:none
+framework: auto-detect
+storage: none
 
 nuget fsharp.core redirects: force
 nuget suave
-nuget ILLink.Tasks  ~> 0.1.4-preview-981901
 nuget status
 nuget Fable.JsonConverter
 nuget jose-jwt
-nuget newtonsoft.json
+nuget newtonsoft.json >= 10.0.3
 nuget Fable.Core
 nuget Fable.Import.Browser
 nuget Fable.React
@@ -17,9 +15,7 @@ clitool dotnet-fable
 nuget Fable.PowerPack
 nuget fable.validation
 nuget shopifysharp
-nuget npgsql
-nuget System.Threading.Tasks.Extensions
-nuget npgsql.fsharp
+nuget davenport.fsharp
 
 group Build
   source https://nuget.org/api/v2
