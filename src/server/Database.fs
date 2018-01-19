@@ -1,138 +1,79 @@
 module Database
 
-open Npgsql.FSharp
+open Davenport.Fsharp.Wrapper
 open Domain
 
-let connString = ServerConstants.databaseConnectionString
+let private asyncTryHead (a: Async<'a seq>) = async {
+    let! result = a
 
-type ListOrder =
-    | Descending of string
-    | Ascending of string
-
-let toUserOption: SqlRow -> Domain.User option =
-    function
-    | [ "id", Sql.Int id
-        "email", Sql.String email
-        "created", Sql.Long created
-        "hashedPassword", Sql.String password
-        "shopifyAccessToken", Sql.String token
-        "myShopifyUrl", Sql.String myShopifyUrl
-        "shopId", Sql.Long shopId
-        "shopName", Sql.String shopName ] ->
-        { id = id
-          email = email
-          created = created
-          hashedPassword = password
-          shopifyAccessToken = token
-          myShopifyUrl = myShopifyUrl
-          shopId = shopId
-          shopName = shopName }
-        |> Some
-    | _ -> None
-
-let paramsFromUser (user: Domain.User) =
-    [
-        "id", Sql.Int user.id
-        "email", Sql.String user.email
-        "created", Sql.Long user.created
-        "hashedPassword", Sql.String user.hashedPassword
-        "shopifyAccessToken", Sql.String user.shopifyAccessToken
-        "myShopifyUrl", Sql.String user.myShopifyUrl
-        "shopId", Sql.Long user.shopId
-        "shopName", Sql.String user.shopName
-    ]
-
-let withoutIdProp = List.filter (fun (key, _) -> key <> "id")
-
-let getUserById (id: int): Async<Domain.User option> = async {
-    let! result =
-        connString
-        |> Sql.connect
-        |> Sql.query "SELECT * FROM Users WHERE id = @id"
-        |> Sql.parameters ["id", Sql.Int id]
-        |> Sql.executeTableAsync
-
-    return
-        result
-        |> Sql.mapEachRow toUserOption
-        |> Seq.tryHead
+    return Seq.tryHead result
 }
 
-let getUserByShopId (id: int64): Async<Domain.User option> = async {
-    let! result =
-        connString
-        |> Sql.connect
-        |> Sql.query "SELECT * FROM Users WHERE shopId = @shopId"
-        |> Sql.parameters ["shopId", Sql.Long id]
-        |> Sql.executeTableAsync
+let private addUsernameAndPassword client =
+    match ServerConstants.couchdbUsername, ServerConstants.couchdbPassword with
+    | Some u, Some p -> client |> username u |> password p
+    | Some u, None -> client |> username u
+    | None, Some p -> client |> password p
+    | None, None -> client
 
-    return
-        result
-        |> Sql.mapEachRow toUserOption
-        |> Seq.tryHead
+let private userDb =
+    ServerConstants.couchdbUrl
+    |> database "blackfuse_users"
+    |> addUsernameAndPassword
+    |> idField "id" // Map the User record's id label to CouchDB's _id field
+    |> revField "rev" // Map the User record's rev label to CouchDB's _rev field
+
+/// Configures all couchdb databases used by this app by creating them (if they don't exist), creating indexes and creating/updating design docs.
+let configureDatabases = async {
+    let userDbIndexes = ["shopId"] // Makes searching for users by their ShopId faster
+    let userDbDesignDocs = []
+
+    do! Async.Parallel [
+            userDb |> configureDatabase userDbDesignDocs userDbIndexes
+        ]
+        |> Async.Ignore
 }
 
-let listUsers (order: ListOrder option) (limit: int option) = async {
-    let limitSql =
-        limit
-        |> Option.map (fun _ -> "LIMIT @limit")
-        |> Option.defaultValue ""
+let getUserById id rev =
+    userDb
+    |> get<User> id rev
 
-    let orderBySql =
-        match order with
-        | Some (Ascending s) -> sprintf "%s ASC" s
-        | Some (Descending s) -> sprintf "%s DESC" s
-        | None -> "created DESC"
-        |> sprintf "ORDER BY %s"
+let getUserByShopId (id: int64) =
+    let options = Davenport.Entities.FindOptions()
+    options.Limit <- 1 |> System.Nullable
 
-    let sql = sprintf "SELECT * FROM Users %s %s" limitSql orderBySql
+    userDb
+    |> findByExpr <@ fun (u: User) -> u.shopId = id @> (Some options)
+    |> asyncTryHead
 
-    let! result =
-        connString
-        |> Sql.connect
-        |> Sql.query sql
-        |> fun query -> match limit with | Some l -> Sql.parameters ["limit", Sql.Int l] query | None -> query
-        |> Sql.executeTableAsync
+/// Returns a tuple of (totalRows * User seq).
+let listUsers limit =
+    let options =
+        match limit with
+        | None -> None
+        | Some l ->
+            let o = Davenport.Entities.ListOptions()
+            o.Limit <- Option.toNullable l
+            Some o
 
-    return
-        result
-        |> Sql.mapEachRow toUserOption
+    userDb
+    |> listWithDocs<User> options
+    |> asyncMap (fun d -> d.TotalRows, d.Rows |> Seq.map (fun r -> r.Doc))
+
+/// Creates a user, returning a new user record with the Id and Rev labels filled by CouchDB.
+let createUser user = async {
+    let! result = userDb |> create<User> user
+
+    assert result.Ok
+
+    return { user with id = result.Id; rev = result.Rev }
 }
 
-let createUser (user: Domain.User) =
-    let sqlParams =
-        paramsFromUser user
-        |> withoutIdProp
-    let fields =
-        sqlParams
-        |> Seq.map (fun (key, _) -> key)
-        |> String.concat ", "
-    let values =
-        sqlParams
-        |> Seq.map (fun (key, _) -> sprintf "@%s" key)
-        |> String.concat ", "
-    let sql = sprintf "INSERT INTO Users FIELDS (%s) VALUES (%s)" fields values
+/// Updates the user with the given id and revision, returning a new user record with the Id and Rev labels updated by CouchDB.
+let updateUser id rev user = async {
+    let! result = userDb |> update<User> id rev user
 
-    connString
-    |> Sql.connect
-    |> Sql.query sql
-    |> Sql.parameters sqlParams
-    |> Sql.executeNonQuerySafeAsync
+    assert result.Ok
 
-let updateUser (id: int) (user: Domain.User) =
-    let sqlParams =
-        paramsFromUser user
-        |> withoutIdProp
-    let sql =
-        sqlParams
-        |> withoutIdProp
-        |> Seq.map (fun (key, _) -> sprintf "%s = @%s" key key)
-        |> String.concat ", "
-        |> sprintf "UPDATE Users SET %s WHERE id = @id"
-
-    connString
-    |> Sql.connect
-    |> Sql.query sql
-    // Use the id passed to the function to ensure we get the intended one
-    |> Sql.parameters (sqlParams@["id", Sql.Int id])
-    |> Sql.executeNonQuerySafeAsync
+    return { user with id = result.Id; rev = result.Rev }
+}

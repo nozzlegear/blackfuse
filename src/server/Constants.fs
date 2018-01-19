@@ -36,4 +36,8 @@ let authScopes: ShopifySharp.Enums.AuthorizationScope list =
         ShopifySharp.Enums.AuthorizationScope.WriteOrders
     ]
 
-let databaseConnectionString = envVarRequired "DATABASE_CONNECTION_STRING"
+let couchdbUrl = envVarDefault "COUCHDB_URL" "localhost:5984"
+
+let couchdbUsername = envVar "COUCHDB_USERNAME"
+
+let couchdbPassword = envVar "COUCHDB_PASSWORD"

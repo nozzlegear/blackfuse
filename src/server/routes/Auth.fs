@@ -87,7 +87,6 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
     // TODO: Lookup user in database to see if we're creating a new user or logging in an old one.
     let! dbUser = Database.getUserByShopId shopId
 
-
     let! accessToken =
         AuthorizationService.Authorize(
             code,
@@ -105,6 +104,7 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
           email = if not <| isNull shop.CustomerEmail then shop.CustomerEmail else shop.Email
           hashedPassword = "TEMPORARY PASS"
           id = "rando_id"
+          rev = "rando_rev"
           myShopifyUrl = shopUrl
           shopName = shop.Name
           shopId = shop.Id.Value }

@@ -7,20 +7,25 @@ type ErrorResponse =
       statusDescription: string
       message: string }
 
-type User =
-  { id: int
-    email: string
-    /// The date the user was created, in unix seconds (not JS milliseconds).
-    created: int64
-    hashedPassword: string
-    shopifyAccessToken: string
-    myShopifyUrl: string
-    shopId: int64
-    shopName: string }
+type User = {
+  /// A unique identifier used by CouchDB to lookup this record.
+  id: string
+  /// A unique identifier used by CouchDB to version this record.
+  rev: string
+  email: string
+  /// The date the user was created, in unix seconds (not JS milliseconds).
+  created: int64
+  hashedPassword: string
+  shopifyAccessToken: string
+  myShopifyUrl: string
+  shopId: int64
+  shopName: string
+}
 
 /// A pared-down User object, containing only the data needed by the client. Should NEVER contain sensitive data like the user's password.
 type SessionToken =
   { id: string
+    rev: string
     email: string
     /// The date the user was created, in unix seconds (not JS milliseconds).
     created: int64
@@ -32,6 +37,7 @@ type SessionToken =
   with
   static member FromUser exp (user: User) =
     { id = user.id
+      rev = user.rev
       email = user.email
       myShopifyUrl = user.myShopifyUrl
       shopId = user.shopId
