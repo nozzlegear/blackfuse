@@ -5,7 +5,7 @@ open Fable.Core
 open Fable.Import
 open Fable.PowerPack
 open Fable.PowerPack.PromiseImpl
-open Domain.Requests.Auth
+open Domain.Requests.OAuth
 module S = Stores.Billing
 module R = Fable.Helpers.React
 module P = R.Props
@@ -16,6 +16,19 @@ module MobxReact = Fable.Import.MobxReact
 let getUrlAndRedirect _ =
     if not <| Mobx.get S.loading then
         S.startLoading()
+
+        promise {
+            let! result = Services.Billing.getShopifyChargeUrl()
+
+            match result with
+            | Error e ->
+                Fable.Import.Browser.console.error e
+                S.receivedError e.message
+            | Ok r ->
+                // Redirect to the "accept charge" URL
+                Browser.window.location.href <- r.url
+        }
+        |> Promise.start
 
 
 let Page dict =

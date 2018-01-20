@@ -30,21 +30,6 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
         HttpException ("The domain you entered is not a valid Shopify shop's domain.", Status.UnprocessableEntity)
         |> raise
 
-    let redirectUrl =
-        if not ServerConstants.isLive then
-            Utils.withPathAndProtocolBack "localhost:8000"
-        else
-            // Get the app's domain so we can combine it with the oauth redirect path but not have to hardcode localhost/live domain
-            match req.header("host") with
-            | Choice1Of2 h ->
-                // Make sure the uri has a protocol and host. In most cases the raw string does not have a protocol,
-                // and passing "localhost:3000" to a uribuilder makes it think there's no host either.
-                Utils.withPathAndProtocolBack h
-            | Choice2Of2 _ ->
-                Errors.HttpException("Unable to determine host URL.", Status.InternalServerError)
-                |> raise
-        <| Paths.Auth.completeOAuth
-
     // Sending the user to the oauth url will let us onboard them if they haven't installed the app,
     // and let us log them in if they have.
     let oauthUrl =
@@ -52,7 +37,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
             ServerConstants.authScopes,
             domain,
             ServerConstants.shopifyApiKey,
-            redirectUrl.ToString())
+            Utils.toAbsoluteUrl req Paths.Auth.completeOAuth |> string)
 
     return!
         Successful.OK <| sprintf """{"url":"%s"}""" (oauthUrl.ToString())
@@ -63,7 +48,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
 let shopifyLoginOrRegister = request <| fun req ctx -> async {
     let body =
         req.rawForm
-        |> Json.parseFromBody<Requests.Auth.CompleteShopifyOauth>
+        |> Json.parseFromBody<Requests.OAuth.CompleteShopifyOauth>
         |> fun t -> t.Validate()
         |> function
         | Ok b -> b
@@ -116,10 +101,6 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
         >=> Cookie.setCookie (createSessionCookie user)
         <| ctx
 }
-
-let checkUserState = context <| fun ctx ->
-    printfn "User state: %A" ctx.userState
-    Successful.OK "This required auth and a user state"
 
 let routes = [
     POST >=> choose [

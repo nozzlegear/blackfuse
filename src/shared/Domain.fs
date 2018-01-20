@@ -51,7 +51,7 @@ type SessionTokenResponse =
     { token = token }
 
 module Requests =
-  module Auth =
+  module OAuth =
     type CompleteShopifyOauth  =
       { rawQueryString: string }
       with

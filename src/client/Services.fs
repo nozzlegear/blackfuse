@@ -61,20 +61,23 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
     GlobalFetch.fetch(RequestInfo.Url url, requestProps reqProps)
 
 module Auth =
-    open Domain.Requests.Auth
+    open Domain.Requests.OAuth
     let getShopifyOauthUrl (myShopifyDomain: string) =
         let apiUrl = sprintf "/api/v1/auth/oauth/shopify?domain=%s" myShopifyDomain
 
         sendRequest apiUrl HttpMethod.GET None
         |> getResponse
-        |> Promise.map (fun r ->
-            match r with
-            | Ok s -> ofJson<GetShopifyOauthUrlResult> s |> Ok
-            | Error e -> Error e
-        )
+        |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
     let completeOauth(rawQueryString: string) =
         { rawQueryString = rawQueryString }
         |> Some
         |> sendRequest "/api/v1/auth/oauth/shopify" HttpMethod.POST
         |> getResponse
+
+module Billing =
+    open Domain.Requests.OAuth
+    let getShopifyChargeUrl () =
+        sendRequest "/api/v1/billing/create-charge-url" HttpMethod.POST None
+        |> getResponse
+        |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)

@@ -60,6 +60,7 @@ let main _ =
 
     let allRoutes =
         Routes.Auth.routes
+        @Routes.Billing.routes
         @[wildcardRoute] // Wildcard should come last
         |> choose
 

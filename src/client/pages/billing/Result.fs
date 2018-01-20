@@ -5,7 +5,7 @@ open Fable.Core
 open Fable.Import
 open Fable.PowerPack
 open Fable.PowerPack.PromiseImpl
-open Domain.Requests.Auth
+open Domain.Requests.OAuth
 module S = Stores.Billing
 module R = Fable.Helpers.React
 module P = R.Props

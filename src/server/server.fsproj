@@ -13,14 +13,15 @@
     <Compile Include="../shared/Validation.fs" />
     <Compile Include="../shared/Paths.fs" />
     <Compile Include="Constants.fs" />
+    <Compile Include="Errors.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Folder.fs" />
     <Compile Include="Json.fs" />
-    <Compile Include="Errors.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Jwt.fs" />
     <Compile Include="Filters.fs" />
     <Compile Include="routes/Auth.fs" />
+    <Compile Include="routes/Billing.fs" />
     <Compile Include="routes/Users.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

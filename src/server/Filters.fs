@@ -1,31 +1,39 @@
 module Filters
 
 open Suave
-open Suave.Operators
-open Suave.Filters
 open Suave.Cookie
 open ShopifySharp
 
-/// Verifies that the request is authenticated. If so this will the given WebPart, else returns a Forbidden response and ends the request. Can be used with the authentication <!!> operator: path "/" <!!> myAuthedWebpart.
-let authenticate part = request <| fun req ctx ->
-    let authHeader = req.header "let-me-through"
+/// Verifies that the request is authenticated via JWT cookie, then passes the SessionToken to the next function if so.
+/// ```
+/// let myRoute = withSession <| fun user req ctx -> async {
+///
+/// }
+/// ```
+let withSession part: HttpContext -> Async<HttpContext option> = request <| fun req ctx -> async {
+    return!
+        req.cookies.TryFind Constants.CookieName
+        |> Option.bind (fun c -> Jwt.tryDecode c.value)
+        |> Option.map (fun t -> part t req ctx)
+        |> Option.defaultValue (RequestErrors.FORBIDDEN "You are not authorized to access that resource." ctx)
+}
 
-    match authHeader with
-    | Choice1Of2 header ->
-        printfn "Choice 1. The header value is %s" header
+/// Uses `withSession` to verify that the request is authenticated via JWT cookie, then pulls the full User model from the database and passes it to the next function.
+/// ```
+/// let myRoute = withUser <| fun user req ctx -> async {
+///
+/// }
+/// ```
+let withUser part: HttpContext -> Async<HttpContext option> = withSession <| fun user req ctx -> async {
+    let! user = Database.getUserById user.id (Some user.rev)
 
-        Writers.setUserData "user" "henlo world"
-        >=> part
-        <| ctx
-    | Choice2Of2 _ ->
-        // Return a Forbidden status because Unauthorized has a bug in Edge where it can't read the body.
-        RequestErrors.FORBIDDEN "You are not authorized to access that resource." ctx
+    return!
+        user
+        |> Option.map (fun u -> part u req ctx)
+        |> Option.defaultValue (RequestErrors.FORBIDDEN "You are not authorized to access that resource." ctx)
+}
 
 let validShopifyRequest part = request <| fun req ctx ->
     match AuthorizationService.IsAuthenticRequest(req.rawQuery, ServerConstants.shopifySecretKey) with
     | true -> part ctx
     | false -> RequestErrors.FORBIDDEN "Request did not pass Shopify's web request authorization scheme." ctx
-
-/// Authentication operator. Injects an authentication mechanism between the two webparts so that the second webpart will not execute if the user is not authenticated (in which case a Forbidden result is returned instead.)
-let inline (+.+) part1 (part2: WebPart): WebPart =
-    part1 >=> authenticate part2
