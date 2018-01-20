@@ -15,6 +15,12 @@ let session = mobx.computed <| fun _ ->
 
 let isAuthenticated = mobx.computed (fun _ -> Option.isSome <| mobx.get session)
 
+let hasSubscription = mobx.computed (fun _ ->
+    mobx.get session
+    |> Option.map (fun s -> Option.isSome s.shopifyChargeId)
+    |> Option.defaultValue false
+)
+
 let logIn (token': string) = mobx.runInAction <| fun _ ->
     mobx.set token (Some token')
 

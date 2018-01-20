@@ -15,6 +15,10 @@ module AuthStore = Stores.Auth
 // Import CSS bundle
 importSideEffects "./public/css/all.styl"
 
+type RequiredAuth =
+    | WithSubscription
+    | WithoutSubscription
+
 let nav =
     let hamburger = Icon.hamburgerIcon [Icon.Size 25; Icon.Color "#fff"; Icon.ClassName "pointer"; Icon.OnClick (ignore >> NavStore.toggleNavIsOpen)]
     Nav.navbar [Nav.Title Constants.AppName; Nav.Background BrowserConstants.ThemeColor; Nav.LeftAction hamburger]
@@ -104,23 +108,31 @@ let DashboardPage dict =
     ]
 
 let appRoutes: Router.Route list =
-    let requireAuth _ =
-        match Mobx.get Stores.Auth.isAuthenticated with
-        | true -> None
-        | false -> Some Paths.Auth.login
+    let requireAuth kind _ =
+        match kind, Mobx.get Stores.Auth.isAuthenticated, Mobx.get Stores.Auth.hasSubscription with
+        | WithSubscription, true, true
+        | WithoutSubscription, true, _ -> None
+        | WithoutSubscription, false, _
+        | WithSubscription, false, _ -> Some Paths.Auth.login
+        | WithSubscription, true, false -> Some Paths.Billing.index
+
     let logout _ =
         Stores.Auth.logOut()
         JsCookie.remove Constants.CookieName
         Some Paths.Auth.login
 
     [
-        Router.groupWithGuard withNav requireAuth [
+        Router.groupWithGuard withNav (requireAuth WithSubscription) [
             Router.route Paths.home DashboardPage
         ]
         Router.group withoutNav [
             Router.route Paths.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
             Router.route Paths.Auth.register <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Register
             Router.route Paths.Auth.completeOAuth <| Pages.Auth.CompleteOauth.Page
+        ]
+        Router.groupWithGuard withoutNav (requireAuth WithoutSubscription) [
+            Router.route Paths.Billing.index <| Pages.Billing.GetUrl.Page
+            Router.route Paths.Billing.result <| Pages.Billing.Result.Page
         ]
         Router.routeWithGuard Paths.Auth.logout logout (fun _ -> R.noscript [] [])
     ]
