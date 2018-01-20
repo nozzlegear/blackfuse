@@ -22,3 +22,5 @@ let fromValidation (errorMap: Map<string, string list>) =
     HttpException (message, UnprocessableEntity)
 
 let badData msg = HttpException(msg, Status.UnprocessableEntity)
+
+let forbidden msg = HttpException(msg, Status.Forbidden)

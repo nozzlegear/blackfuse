@@ -16,7 +16,7 @@ let receivedError msg = Mobx.runInAction (fun _ ->
     Mobx.set error <| Some msg
 )
 
-let reset = Mobx.runInAction (fun _ ->
+let reset() = Mobx.runInAction (fun _ ->
     Mobx.set loading false
     Mobx.set error None
 )

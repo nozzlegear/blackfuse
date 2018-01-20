@@ -39,17 +39,39 @@ let updateSubscriptionCharge = withUser <| fun user req ctx -> async {
         | Ok b -> b
         | Error e -> raise <| fromValidation e
 
-    if not <| AuthorizationService.IsAuthenticRequest(body.rawQueryString, ServerConstants.shopifySecretKey)
-    then raise <| HttpException("Request did not pass Shopify's validation scheme.", Status.Forbidden)
+    // The charge result redirection does not include values to verify that the request is authentic.
+    // You're instead expected to load the charge id via the Shopify API.
 
-    raise <| HttpException("Not yet implemented", Status.InternalServerError)
+    let qs =
+        AuthorizationService.ParseRawQuerystring body.rawQueryString
+        |> Seq.map (|KeyValue|)
+        |> Map.ofSeq
 
-    return! Successful.OK "" ctx
+    let chargeId =
+        try qs.Item "charge_id" |> Int64.Parse
+        with _ -> raise <| badData "Missing charge_id value in Shopify redirected querystring."
+
+    let service = RecurringChargeService(user.myShopifyUrl, user.shopifyAccessToken)
+    let! charge = service.GetAsync chargeId |> Async.AwaitTask
+
+    do!
+        match charge.Status with
+        | "accepted" -> service.ActivateAsync chargeId |> Async.AwaitTask
+        | "active" -> async { () } // Charge has already been activated. No reason to throw an exception.
+        | "expired" -> raise <| HttpException("It looks like your request has timed out. Please try again.", Status.PreconditionFailed)
+        | s -> raise <| HttpException(sprintf "You must accept the subscription charge to use %s. Charge status: %s." Constants.AppName s, Status.PreconditionFailed)
+
+    // Update the user's database model
+    let! user = Database.updateUser user.id user.rev ({user with shopifyChargeId = Some chargeId})
+
+    return!
+        Successful.OK "{}"
+        >=> Writers.setMimeType Json.MimeType
+        >=> Cookie.setCookie (Routes.Auth.createSessionCookie user)
+        <| ctx
 }
 
 let routes = [
-    POST >=> choose [
-        path "/api/v1/billing/create-charge-url" >=> createChargeUrl
-        path "/api/v1/billing/update" >=> updateSubscriptionCharge
-    ]
+    POST >=> path "/api/v1/billing/create-charge-url" >=> createChargeUrl
+    PUT >=> path "/api/v1/billing/update" >=> updateSubscriptionCharge
 ]

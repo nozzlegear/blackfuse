@@ -69,7 +69,7 @@ module Auth =
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
-    let completeOauth(rawQueryString: string) =
+    let completeOauth rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
         |> sendRequest "/api/v1/auth/oauth/shopify" HttpMethod.POST
@@ -81,3 +81,9 @@ module Billing =
         sendRequest "/api/v1/billing/create-charge-url" HttpMethod.POST None
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
+
+    let completeCharge rawQueryString =
+        { rawQueryString = rawQueryString }
+        |> Some
+        |> sendRequest "/api/v1/billing/update" HttpMethod.PUT
+        |> getResponse

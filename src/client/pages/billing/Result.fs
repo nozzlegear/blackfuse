@@ -17,30 +17,57 @@ let completeBillingSetup _ =
     if not <| Mobx.get S.loading then
         S.startLoading()
 
+        promise {
+            let! result = Services.Billing.completeCharge Browser.window.location.search
+
+            match result with
+            | Error e ->
+                Fable.Import.Browser.console.error e
+                S.receivedError e.message
+            | Ok _ ->
+                match JsCookie.get Constants.CookieName with
+                | Some token ->
+                    Stores.Auth.logIn token
+                    Router.push Paths.home
+                    S.reset()
+                | None ->
+                    S.receivedError "Error parsing authorization cookie. Please try again."
+        }
+        |> Promise.start
 
 let Page dict =
+    let completer = C.AfterMount completeBillingSetup
+
     fun _ ->
         let error, loading = Mobx.get S.error, Mobx.get S.loading
 
         let footer =
-            match loading with
-            | true -> None
-            | false ->
+            match loading, error with
+            | true, _ -> None
+            | false, Some _ ->
                 Some
                 <| R.div [] [
-                    R.button [P.ClassName "btn blue"; P.OnClick completeBillingSetup] [
-                        R.str "Start my free trial!"
+                    Router.link Paths.Billing.index [P.ClassName "btn"] [
+                        R.str "Try again."
                     ]
                 ]
+            | false, None -> Some completer
 
         let body =
-            R.div [] [
-                R.str "not yet implemented"
-            ]
+            match loading, error with
+            | true, _
+            | false, None -> [R.progress [] []]
+            | false, Some _ -> [ReactIcons.errorIcon [ReactIcons.Size 150; ReactIcons.Color "red"]]
+            |> R.div [P.ClassName "text-center"]
+
+        let description =
+            match error with
+            | Some _ -> sprintf "Encountered an error while activating your %s subscription." Constants.AppName
+            | None -> "Please wait."
 
         C.Box
-        <| match error with Some _ -> "OAuth Error" | None -> "Signing In..."
-        <| None
+        <| match error with Some _ -> "Subscription Error" | None -> "Activating free trial."
+        <| Some description
         <| error
         <| footer
         <| [body]

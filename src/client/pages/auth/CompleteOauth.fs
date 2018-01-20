@@ -24,8 +24,8 @@ let completeOauth _ =
                 match JsCookie.get Constants.CookieName with
                 | Some token ->
                     S.logIn token
+                    Router.push Paths.home
                     S.OAuth.reset()
-                    Router.push "/"
                 | None ->
                     S.OAuth.receivedError "Error parsing authorization cookie. Please try again."
             | Error e ->

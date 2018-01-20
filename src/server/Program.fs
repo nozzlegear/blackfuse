@@ -38,7 +38,7 @@ let wildcardRoute = request (fun req ->
     match req.path with
     | p when apiRegex.IsMatch p ->
         // Request to API path fell through, route was not found.
-        raise <| HttpException(sprintf "No API route found at path %s" req.path, Status.Code.NotFound)
+        raise <| HttpException(sprintf "No API route found at path %A %s" req.method req.path, Status.Code.NotFound)
     | p when publicRegex.IsMatch p ->
         // TODO: Check if file exists, throw exception if it doesn't
         raise <| System.NotImplementedException("Public path not implemented")
