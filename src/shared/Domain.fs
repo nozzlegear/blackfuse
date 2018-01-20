@@ -18,6 +18,7 @@ type User = {
   myShopifyUrl: string
   shopId: int64
   shopName: string
+  shopifyChargeId: int64 option
 }
 
 /// A pared-down User object, containing only the data needed by the client. Should NEVER contain sensitive data like the user's password.
@@ -29,6 +30,7 @@ type SessionToken =
     myShopifyUrl: string
     shopId: int64
     shopName: string
+    shopifyChargeId: int64 option
     /// The date the SessionToken expires, in unix seconds (not JS milliseconds).
     exp: int64 }
   with
@@ -38,6 +40,7 @@ type SessionToken =
       myShopifyUrl = user.myShopifyUrl
       shopId = user.shopId
       shopName = user.shopName
+      shopifyChargeId = user.shopifyChargeId
       created = user.created
       exp = exp }
 

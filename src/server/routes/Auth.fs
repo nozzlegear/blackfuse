@@ -106,7 +106,8 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
               rev = "" // Will be filled by CouchDB
               myShopifyUrl = shopUrl
               shopName = shop.Name
-              shopId = shop.Id.Value }
+              shopId = shop.Id.Value
+              shopifyChargeId = None }
             |> Database.createUser
 
     return!
