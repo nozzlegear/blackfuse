@@ -78,15 +78,9 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
         |> Map.ofSeq
     let code = qs.Item "code"
     let shopUrl = qs.Item "shop"
-    let shopId =
-        if true then
-            raise <| NotImplementedException("TODO: Check the querystring to see if shop id exists.")
-        else
-            qs.Item "shopid" |> int64
 
-    // TODO: Lookup user in database to see if we're creating a new user or logging in an old one.
-    let! dbUser = Database.getUserByShopId shopId
-
+    // Activate the code to get a new accesstoken, whether the user is new or already exists. Getting a new token for an existing
+    // user will not invalidate any previous API usage, billing charges, etc, and makes it much easier to reintegrate a returning user.
     let! accessToken =
         AuthorizationService.Authorize(
             code,
@@ -98,16 +92,22 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
         ShopService(shopUrl, accessToken).GetAsync()
         |> Async.AwaitTask
 
-    let user: Domain.User =
-        { shopifyAccessToken = accessToken
-          created = Date.toUnixTimestamp DateTime.UtcNow
-          email = if not <| isNull shop.CustomerEmail then shop.CustomerEmail else shop.Email
-          hashedPassword = "TEMPORARY PASS"
-          id = "rando_id"
-          rev = "rando_rev"
-          myShopifyUrl = shopUrl
-          shopName = shop.Name
-          shopId = shop.Id.Value }
+    // Lookup user in database to see if we're creating a new user or logging in and updating an existing one.
+    let! dbUser = Database.getUserByShopId <| shop.Id.GetValueOrDefault 0L
+    let! user =
+        match dbUser with
+        | Some u ->
+            { u with shopifyAccessToken = accessToken }
+            |> Database.updateUser u.id u.rev
+        | None ->
+            { shopifyAccessToken = accessToken
+              created = Date.toUnixTimestamp DateTime.UtcNow
+              id = "" // Will be filled by CouchDB
+              rev = "" // Will be filled by CouchDB
+              myShopifyUrl = shopUrl
+              shopName = shop.Name
+              shopId = shop.Id.Value }
+            |> Database.createUser
 
     return!
         Successful.OK "{}"

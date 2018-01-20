@@ -9,6 +9,8 @@ let private asyncTryHead (a: Async<'a seq>) = async {
     return Seq.tryHead result
 }
 
+let private printWarning = printfn "%s"
+
 let private addUsernameAndPassword client =
     match ServerConstants.couchdbUsername, ServerConstants.couchdbPassword with
     | Some u, Some p -> client |> username u |> password p
@@ -22,16 +24,20 @@ let private userDb =
     |> addUsernameAndPassword
     |> idField "id" // Map the User record's id label to CouchDB's _id field
     |> revField "rev" // Map the User record's rev label to CouchDB's _rev field
+    |> warning (Event.add printWarning)
 
 /// Configures all couchdb databases used by this app by creating them (if they don't exist), creating indexes and creating/updating design docs.
 let configureDatabases = async {
     let userDbIndexes = ["shopId"] // Makes searching for users by their ShopId faster
     let userDbDesignDocs = []
 
-    do! Async.Parallel [
+    // Not using Async.Ignore to make sure any errors thrown by database configuration bubble up to the app.
+    let! _ =
+        Async.Parallel [
             userDb |> configureDatabase userDbDesignDocs userDbIndexes
         ]
-        |> Async.Ignore
+
+    ()
 }
 
 let getUserById id rev =
