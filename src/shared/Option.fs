@@ -8,3 +8,9 @@ let ofBoolBack b a =
 
 let ofNullable a =
     if isNull a then None else Some a
+
+/// Converts the string option to a string. `match opt with | Some o -> o | None -> ""`
+let toString (a: string option) =
+    match a with
+    | Some a -> a
+    | None -> ""

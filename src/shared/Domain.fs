@@ -14,10 +14,11 @@ type User = {
   rev: string
   /// The date the user was created, in unix seconds (not JS milliseconds).
   created: int64
-  shopifyAccessToken: string
-  myShopifyUrl: string
   shopId: int64
-  shopName: string
+  /// Will be None if the user is unsubscribed.
+  shopifyAccessToken: string option
+  myShopifyUrl: string option
+  shopName: string option
   shopifyChargeId: int64 option
 }
 
@@ -27,9 +28,9 @@ type SessionToken =
     rev: string
     /// The date the user was created, in unix seconds (not JS milliseconds).
     created: int64
-    myShopifyUrl: string
     shopId: int64
-    shopName: string
+    myShopifyUrl: string option
+    shopName: string option
     shopifyChargeId: int64 option
     /// The date the SessionToken expires, in unix seconds (not JS milliseconds).
     exp: int64 }

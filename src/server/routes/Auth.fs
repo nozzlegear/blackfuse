@@ -82,15 +82,15 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
     let! user =
         match dbUser with
         | Some u ->
-            { u with shopifyAccessToken = accessToken }
+            { u with shopifyAccessToken = Some accessToken }
             |> Database.updateUser u.id u.rev
         | None ->
-            { shopifyAccessToken = accessToken
+            { shopifyAccessToken = Some accessToken
               created = Date.toUnixTimestamp DateTime.UtcNow
               id = "" // Will be filled by CouchDB
               rev = "" // Will be filled by CouchDB
-              myShopifyUrl = shopUrl
-              shopName = shop.Name
+              myShopifyUrl = Some shopUrl
+              shopName = Some shop.Name
               shopId = shop.Id.Value
               shopifyChargeId = None }
             |> Database.createUser

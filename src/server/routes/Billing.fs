@@ -12,7 +12,7 @@ let createChargeUrl = withUser <| fun user req ctx -> async {
     if Option.isSome user.shopifyChargeId
     then raise <| HttpException("Your account is already subscribed!", Status.UnprocessableEntity)
 
-    let service = RecurringChargeService(user.myShopifyUrl, user.shopifyAccessToken)
+    let service = RecurringChargeService(Option.get user.myShopifyUrl, Option.get user.shopifyAccessToken)
     let charge = RecurringCharge()
     charge.Name <- sprintf "%s monthly subscription" Constants.AppName
     charge.Price <- Option.toNullable <| Some Constants.SubscriptionPrice
@@ -51,7 +51,7 @@ let updateSubscriptionCharge = withUser <| fun user req ctx -> async {
         try qs.Item "charge_id" |> Int64.Parse
         with _ -> raise <| badData "Missing charge_id value in Shopify redirected querystring."
 
-    let service = RecurringChargeService(user.myShopifyUrl, user.shopifyAccessToken)
+    let service = RecurringChargeService(Option.get user.myShopifyUrl, Option.get user.shopifyAccessToken)
     let! charge = service.GetAsync chargeId |> Async.AwaitTask
 
     do!

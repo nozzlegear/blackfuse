@@ -23,6 +23,7 @@
     <Compile Include="routes/Auth.fs" />
     <Compile Include="routes/Billing.fs" />
     <Compile Include="routes/Users.fs" />
+    <Compile Include="routes/Webhooks.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

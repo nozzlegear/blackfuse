@@ -13,7 +13,11 @@ let session = mobx.computed <| fun _ ->
         Some <| Fable.Import.JwtSimple.decodeNoVerify<SessionToken> t
     | None -> None
 
-let isAuthenticated = mobx.computed (fun _ -> Option.isSome <| mobx.get session)
+let isAuthenticated = mobx.computed (fun _ ->
+    match mobx.get session with
+    | None -> false
+    | Some s -> Option.isSome s.shopName && Option.isSome s.myShopifyUrl
+)
 
 let hasSubscription = mobx.computed (fun _ ->
     mobx.get session
