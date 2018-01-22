@@ -3,6 +3,8 @@ module Filters
 open Suave
 open Suave.Cookie
 open ShopifySharp
+open System.Collections.Generic
+open Microsoft.Extensions.Primitives
 
 let forbidden = RequestErrors.FORBIDDEN "You are not authorized to access that resource."
 
@@ -40,7 +42,7 @@ let validShopifyWebhook part = request <| fun req ctx -> async {
     let reqBody = System.Text.Encoding.UTF8.GetString req.rawForm
     let headers =
         req.headers
-        |> Seq.cast<System.Collections.Generic.KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>
+        |> Seq.map (fun (name, value) -> KeyValuePair<string, StringValues>(name, StringValues value))
 
     return!
         match AuthorizationService.IsAuthenticWebhook(headers, reqBody, ServerConstants.shopifySecretKey) with

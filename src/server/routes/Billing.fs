@@ -18,7 +18,7 @@ let createChargeUrl = withUser <| fun user req ctx -> async {
     charge.Price <- Option.toNullable <| Some Constants.SubscriptionPrice
     charge.TrialDays <- Option.toNullable <| Some Constants.FreeTrialDays
     charge.Test <- Option.toNullable <| Some (not ServerConstants.isLive)
-    charge.ReturnUrl <- Utils.toAbsoluteUrl req Paths.Billing.result |> string
+    charge.ReturnUrl <- Utils.toAbsoluteUrl Paths.Billing.result |> string
 
     let! newCharge =
         service.CreateAsync charge

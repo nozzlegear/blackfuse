@@ -20,6 +20,7 @@
     <Compile Include="Database.fs" />
     <Compile Include="Jwt.fs" />
     <Compile Include="Filters.fs" />
+    <Compile Include="WebhookProcessor.fs" />
     <Compile Include="routes/Auth.fs" />
     <Compile Include="routes/Billing.fs" />
     <Compile Include="routes/Users.fs" />

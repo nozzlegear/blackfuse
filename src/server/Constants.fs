@@ -41,3 +41,7 @@ let couchdbUrl = envVarDefault "COUCHDB_URL" "localhost:5984"
 let couchdbUsername = envVar "COUCHDB_USERNAME"
 
 let couchdbPassword = envVar "COUCHDB_PASSWORD"
+
+/// The app's domain, e.g. google.com or facebook.com (without protocol). This is used when creating webhooks and redirect URLs.
+/// Due to that, it should not be set to anything but localhost during development.
+let domain = envVarDefault "APP_DOMAIN" "localhost:8000"

@@ -37,7 +37,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
             ServerConstants.authScopes,
             domain,
             ServerConstants.shopifyApiKey,
-            Utils.toAbsoluteUrl req Paths.Auth.completeOAuth |> string)
+            Utils.toAbsoluteUrl Paths.Auth.completeOAuth |> string)
 
     return!
         Successful.OK <| sprintf """{"url":"%s"}""" (oauthUrl.ToString())
@@ -94,6 +94,11 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
               shopId = shop.Id.Value
               shopifyChargeId = None }
             |> Database.createUser
+
+    // Create webhooks if we're not on localhost (hooks can't be sent to localhost).
+    // WebhookProcessor will handle if they've already been created.
+    if not <| ServerConstants.domain.ToLower().Contains "localhost"
+    then WebhookProcessor.post <| WebhookProcessor.CreateAll user
 
     return!
         Successful.OK "{}"
