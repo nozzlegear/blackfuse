@@ -82,7 +82,7 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
     let! user =
         match dbUser with
         | Some u ->
-            { u with shopifyAccessToken = Some accessToken }
+            { u with shopifyAccessToken = Some accessToken; myShopifyUrl = Some shopUrl; shopName = Some shop.Name }
             |> Database.updateUser u.id u.rev
         | None ->
             { shopifyAccessToken = Some accessToken
