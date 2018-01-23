@@ -98,11 +98,17 @@ FinalTarget "KillProcess" (fun _ ->
 )
 
 Target "LoadEnvironment" (fun _ ->
-    if File.Exists "./env.yml" then
-        printfn("Loading environment variables from env.yml.")
+    let loadEnv file =
+        printfn "Loading environment variables from %s." file
 
-        DotEnvFile.DotEnvFile.LoadFile "./env.yml"
+        DotEnvFile.DotEnvFile.LoadFile file
         |> DotEnvFile.DotEnvFile.InjectIntoEnvironment
+
+    if File.Exists "./env.yml"
+    then loadEnv "./env.yml"
+    elif File.Exists "./env.dev.yml"
+    then loadEnv "./env.dev.yml"
+
 )
 
 Target "Run" (fun _ ->
