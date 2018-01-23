@@ -185,4 +185,8 @@ paket-files
 
 # Ignore crypto password file
 src/server/temp/token.txt
+
+# Ignore unencrypted env files
+env.dev.yml
+env.live.yml
 env.yml
