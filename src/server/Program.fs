@@ -14,8 +14,12 @@ let errorHandler (err: Exception) (msg: string) ctx =
         | :? HttpException as ex -> ex.toErrorResponse()
         | _ ->
             // Call the default error handler to preserve default logging behavior
-            defaultConfig.errorHandler err msg ctx |> ignore
-            Errors.fromStatus msg Status.Code.InternalServerError
+            defaultConfig.errorHandler err msg ctx
+            |> ignore
+
+            let err = serverError msg
+            err.toErrorResponse()
+
     let httpCode =
         match HttpCode.tryParse errorResponse.statusCode with
         | Choice1Of2 code -> code
