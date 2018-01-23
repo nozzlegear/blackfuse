@@ -52,6 +52,26 @@ do if not isWindows then
     let frameworkPath = IO.Path.GetDirectoryName(mono) </> ".." </> "lib" </> "mono" </> "4.5"
     setEnvironVar "FrameworkPathOverride" frameworkPath
 
+let toMap dict =
+    dict :> seq<_>
+    |> Seq.map (|KeyValue|)
+    |> Map.ofSeq
+
+let envFile =
+    if File.Exists "./env.yml"
+    then Some <| DotEnvFile.DotEnvFile.LoadFile "./env.yml"
+    elif File.Exists "./env.dev.yml"
+    then Some <| DotEnvFile.DotEnvFile.LoadFile "./env.dev.yml"
+    else None
+    |> Option.map toMap
+
+let addProtocol (url: string) =
+    let url = url.ToLower()
+
+    if url.StartsWith "https://" || url.StartsWith "http://"
+    then url
+    else sprintf "http://%s" url
+
 Target "Clean" (fun _ ->
     !!"src/**/bin"
     |> CleanDirs
@@ -98,17 +118,14 @@ FinalTarget "KillProcess" (fun _ ->
 )
 
 Target "LoadEnvironment" (fun _ ->
-    let loadEnv file =
-        printfn "Loading environment variables from %s." file
+    match envFile with
+    | Some env ->
+        printfn "Injecting environment from env file."
 
-        DotEnvFile.DotEnvFile.LoadFile file
+        Collections.Generic.Dictionary env
         |> DotEnvFile.DotEnvFile.InjectIntoEnvironment
-
-    if File.Exists "./env.yml"
-    then loadEnv "./env.yml"
-    elif File.Exists "./env.dev.yml"
-    then loadEnv "./env.dev.yml"
-
+    | None ->
+        printfn "Found no environment file, using system environment."
 )
 
 Target "Run" (fun _ ->
@@ -117,8 +134,14 @@ Target "Run" (fun _ ->
     let fable = async { runDotnet clientDir "fable yarn-run watch" }
     let dotnet = async { runDotnet serverDir "run" }
     let openBrowser = async {
-        System.Threading.Thread.Sleep(5000)
-        Diagnostics.Process.Start("http://" + ipAddress + sprintf ":%d" port) |> ignore
+        System.Threading.Thread.Sleep(6000)
+
+        envFile
+        |> Option.bind (fun e -> e.TryFind "APP_DOMAIN")
+        |> Option.map addProtocol
+        |> Option.defaultValue (sprintf "http://%s:%d" ipAddress port)
+        |> Diagnostics.Process.Start
+        |> ignore
     }
 
     [dotnet; fable; openBrowser]
