@@ -18,7 +18,7 @@ let getUrlAndRedirect _ =
         S.startLoading()
 
         promise {
-            let! result = Services.Billing.getShopifyChargeUrl()
+            let! result = Services.Billing.createChargeUrl()
 
             match result with
             | Error e ->

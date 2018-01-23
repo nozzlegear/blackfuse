@@ -17,14 +17,14 @@ let completeOauth _ =
         S.OAuth.beginningAttempt()
 
         promise {
-            let! result = Services.Auth.completeOauth Browser.window.location.search
+            let! result = Services.Auth.loginOrRegister Browser.window.location.search
 
             match result with
             | Ok _ ->
                 match JsCookie.get Constants.CookieName with
                 | Some token ->
                     S.logIn token
-                    Router.push Paths.home
+                    Router.push Paths.Client.home
                     S.OAuth.reset()
                 | None ->
                     S.OAuth.receivedError "Error parsing authorization cookie. Please try again."
@@ -46,7 +46,7 @@ let Page dict =
             | false, Some _ ->
                 Some
                 <| R.div [] [
-                    Router.link Paths.Auth.login [P.ClassName "btn"] [R.str "Try again."]
+                    Router.link Paths.Client.Auth.login [P.ClassName "btn"] [R.str "Try again."]
                 ]
             | false, None -> Some oauthCompleter
 

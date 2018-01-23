@@ -18,7 +18,7 @@ let completeBillingSetup _ =
         S.startLoading()
 
         promise {
-            let! result = Services.Billing.completeCharge Browser.window.location.search
+            let! result = Services.Billing.createOrUpdateCharge Browser.window.location.search
 
             match result with
             | Error e ->
@@ -28,7 +28,7 @@ let completeBillingSetup _ =
                 match JsCookie.get Constants.CookieName with
                 | Some token ->
                     Stores.Auth.logIn token
-                    Router.push Paths.home
+                    Router.push Paths.Client.home
                     S.reset()
                 | None ->
                     S.receivedError "Error parsing authorization cookie. Please try again."
@@ -47,7 +47,7 @@ let Page dict =
             | false, Some _ ->
                 Some
                 <| R.div [] [
-                    Router.link Paths.Billing.index [P.ClassName "btn"] [
+                    Router.link Paths.Client.Billing.index [P.ClassName "btn"] [
                         R.str "Try again."
                     ]
                 ]

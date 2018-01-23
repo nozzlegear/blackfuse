@@ -12,17 +12,14 @@ type private WebhookTopic =
     | ShopUpdated
 
 let private createWebhook myShopifyUrl accessToken topic = async {
-    let topicStr =
+    let topicStr, path =
         match topic with
-        | AppUninstalled -> "app/uninstalled"
-        | ShopUpdated -> "shop/update"
+        | AppUninstalled -> "app/uninstalled", Paths.Api.Webhooks.appUninstalled
+        | ShopUpdated -> "shop/update", Paths.Api.Webhooks.shopUpdated
 
     let hook = Webhook()
     hook.Topic <- topicStr
-    hook.Address <-
-        sprintf "/api/v1/webhooks/%s" topicStr
-        |> Utils.toAbsoluteUrl
-        |> fun u -> u.ToString()
+    hook.Address <- Utils.toAbsoluteUrl path |> string
 
     let! result =
         WebhookService(myShopifyUrl, accessToken).CreateAsync hook

@@ -17,7 +17,7 @@ let createSessionCookie (user: Domain.User) =
     |> HttpCookie.createKV Constants.CookieName
     |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
 
-let getShopifyOAuthUrl = request <| fun req ctx -> async {
+let createUrl = request <| fun req ctx -> async {
     let queryKey = "domain"
     let domain =
         match req.queryParam queryKey with
@@ -37,7 +37,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
             ServerConstants.authScopes,
             domain,
             ServerConstants.shopifyApiKey,
-            Utils.toAbsoluteUrl Paths.Auth.completeOAuth |> string)
+            Utils.toAbsoluteUrl Paths.Client.Auth.completeOAuth |> string)
 
     return!
         Successful.OK <| sprintf """{"url":"%s"}""" (oauthUrl.ToString())
@@ -45,7 +45,7 @@ let getShopifyOAuthUrl = request <| fun req ctx -> async {
         <| ctx
 }
 
-let shopifyLoginOrRegister = request <| fun req ctx -> async {
+let loginOrRegister = request <| fun req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.OAuth.CompleteShopifyOauth>
@@ -108,10 +108,6 @@ let shopifyLoginOrRegister = request <| fun req ctx -> async {
 }
 
 let routes = [
-    POST >=> choose [
-        path "/api/v1/auth/oauth/shopify" >=> shopifyLoginOrRegister
-    ]
-    GET >=> choose [
-        path "/api/v1/auth/oauth/shopify" >=> getShopifyOAuthUrl
-    ]
+    PUT >=> path Paths.Api.Auth.loginOrRegister >=> loginOrRegister
+    POST >=> path Paths.Api.Auth.createUrl >=> createUrl
 ]

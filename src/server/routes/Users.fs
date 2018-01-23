@@ -27,6 +27,6 @@ let register = request <| fun req ctx -> async {
 
 let routes = [
     POST >=> choose [
-        path "/api/v1/users" >=> register
+        path Paths.Api.User.getInfo >=> register
     ]
 ]

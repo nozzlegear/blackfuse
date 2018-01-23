@@ -8,7 +8,7 @@ open Operators
 open ShopifySharp
 open Errors
 
-let createChargeUrl = withUser <| fun user req ctx -> async {
+let createUrl = withUser <| fun user req ctx -> async {
     if Option.isSome user.shopifyChargeId
     then raise <| HttpException("Your account is already subscribed!", Status.UnprocessableEntity)
 
@@ -18,7 +18,7 @@ let createChargeUrl = withUser <| fun user req ctx -> async {
     charge.Price <- Option.toNullable <| Some Constants.SubscriptionPrice
     charge.TrialDays <- Option.toNullable <| Some Constants.FreeTrialDays
     charge.Test <- Option.toNullable <| Some (not ServerConstants.isLive)
-    charge.ReturnUrl <- Utils.toAbsoluteUrl Paths.Billing.result |> string
+    charge.ReturnUrl <- Utils.toAbsoluteUrl Paths.Client.Billing.result |> string
 
     let! newCharge =
         service.CreateAsync charge
@@ -30,7 +30,7 @@ let createChargeUrl = withUser <| fun user req ctx -> async {
         <| ctx
 }
 
-let updateSubscriptionCharge = withUser <| fun user req ctx -> async {
+let createOrUpdateCharge = withUser <| fun user req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.OAuth.CompleteShopifyOauth>
@@ -72,6 +72,6 @@ let updateSubscriptionCharge = withUser <| fun user req ctx -> async {
 }
 
 let routes = [
-    POST >=> path "/api/v1/billing/create-charge-url" >=> createChargeUrl
-    PUT >=> path "/api/v1/billing/update" >=> updateSubscriptionCharge
+    PUT >=> path Paths.Api.Billing.createOrUpdateCharge >=> createOrUpdateCharge
+    POST >=> path Paths.Api.Billing.createUrl >=> createUrl
 ]

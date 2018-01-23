@@ -34,7 +34,7 @@ let navMenu () =
 
     R.div [] [
         R.menu [ClassName "nav-menu"] [
-            link Paths.home "Open Orders"
+            link Paths.Client.home "Open Orders"
             link "#" "Closed Orders"
             link "#" "Tracking Widget"
             link "#" "Automation Rules"
@@ -44,8 +44,8 @@ let navMenu () =
             link "#" "My Stages"
             linebreak
             match Mobx.get AuthStore.isAuthenticated with
-            | true -> Paths.Auth.logout, "Sign out"
-            | false -> Paths.Auth.login, "Sign in"
+            | true -> Paths.Client.Auth.logout, "Sign out"
+            | false -> Paths.Client.Auth.login, "Sign in"
             |> fun (path, text) -> link path text
         ]
     ]
@@ -113,28 +113,28 @@ let appRoutes: Router.Route list =
         | WithSubscription, true, true
         | WithoutSubscription, true, _ -> None
         | WithoutSubscription, false, _
-        | WithSubscription, false, _ -> Some Paths.Auth.login
-        | WithSubscription, true, false -> Some Paths.Billing.index
+        | WithSubscription, false, _ -> Some Paths.Client.Auth.login
+        | WithSubscription, true, false -> Some Paths.Client.Billing.index
 
     let logout _ =
         Stores.Auth.logOut()
         JsCookie.remove Constants.CookieName
-        Some Paths.Auth.login
+        Some Paths.Client.Auth.login
 
     [
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
-            Router.route Paths.home DashboardPage
+            Router.route Paths.Client.home DashboardPage
         ]
         Router.group withoutNav [
-            Router.route Paths.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
-            Router.route Paths.Auth.register <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Register
-            Router.route Paths.Auth.completeOAuth <| Pages.Auth.CompleteOauth.Page
+            Router.route Paths.Client.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
+            Router.route Paths.Client.Auth.register <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Register
+            Router.route Paths.Client.Auth.completeOAuth <| Pages.Auth.CompleteOauth.Page
         ]
         Router.groupWithGuard withoutNav (requireAuth WithoutSubscription) [
-            Router.route Paths.Billing.index <| Pages.Billing.GetUrl.Page
-            Router.route Paths.Billing.result <| Pages.Billing.Result.Page
+            Router.route Paths.Client.Billing.index <| Pages.Billing.GetUrl.Page
+            Router.route Paths.Client.Billing.result <| Pages.Billing.Result.Page
         ]
-        Router.routeWithGuard Paths.Auth.logout logout (fun _ -> R.noscript [] [])
+        Router.routeWithGuard Paths.Client.Auth.logout logout (fun _ -> R.noscript [] [])
     ]
 
 let notFoundPage _ =
@@ -150,7 +150,7 @@ let notFoundPage _ =
                         R.str "Sorry about that, but the page you are looking for doesn't exist."
                     ]
                     R.div [Id "rescue-button-container"] [
-                        Router.link Paths.home [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
+                        Router.link Paths.Client.home [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
                     ]
                 ]
             ]

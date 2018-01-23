@@ -62,28 +62,28 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
 
 module Auth =
     open Domain.Requests.OAuth
-    let getShopifyOauthUrl (myShopifyDomain: string) =
-        let apiUrl = sprintf "/api/v1/auth/oauth/shopify?domain=%s" myShopifyDomain
+    let createOauthUrl (myShopifyDomain: string) =
+        let apiUrl = sprintf "%s?domain=%s" Paths.Api.Auth.createUrl myShopifyDomain
 
         sendRequest apiUrl HttpMethod.GET None
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
-    let completeOauth rawQueryString =
+    let loginOrRegister rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
-        |> sendRequest "/api/v1/auth/oauth/shopify" HttpMethod.POST
+        |> sendRequest Paths.Api.Auth.loginOrRegister HttpMethod.POST
         |> getResponse
 
 module Billing =
     open Domain.Requests.OAuth
-    let getShopifyChargeUrl () =
-        sendRequest "/api/v1/billing/create-charge-url" HttpMethod.POST None
+    let createChargeUrl () =
+        sendRequest Paths.Api.Billing.createUrl HttpMethod.POST None
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
-    let completeCharge rawQueryString =
+    let createOrUpdateCharge rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
-        |> sendRequest "/api/v1/billing/update" HttpMethod.PUT
+        |> sendRequest Paths.Api.Billing.createOrUpdateCharge HttpMethod.PUT
         |> getResponse
