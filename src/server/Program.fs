@@ -7,6 +7,7 @@ open Errors
 open Domain
 open System.Text.RegularExpressions
 open Suave.Files
+open System.IO
 
 let errorHandler (err: Exception) (msg: string) ctx =
     let errorResponse =
@@ -34,6 +35,22 @@ let errorHandler (err: Exception) (msg: string) ctx =
     >=> Writers.setMimeType Json.MimeType
     <| ctx
 
+
+let resolvePath (rootPath : string) (fileName : string) =
+    let fileName =
+      if Path.DirectorySeparatorChar.Equals('/') then fileName
+      else fileName.Replace('/', Path.DirectorySeparatorChar)
+    let calculatedPath =
+      Path.Combine(rootPath, fileName.TrimStart([| Path.DirectorySeparatorChar; Path.AltDirectorySeparatorChar |]))
+      |> Path.GetFullPath
+
+    printfn "CALCULATED PATH IS %s" calculatedPath
+    printfn "ROOT PATH IS %s" rootPath
+
+    if calculatedPath.StartsWith rootPath then
+      calculatedPath
+    else raise <| Exception("File canonalization issue.")
+
 let wildcardRoute = request (fun req ->
     let apiRegex = Regex "(?i)^/?api/"
     let publicRegex = Regex "(?i)^/?public/.*"
@@ -42,13 +59,19 @@ let wildcardRoute = request (fun req ->
     match req.path with
     | p when apiRegex.IsMatch p ->
         // Request to API path fell through, route was not found.
-        raise <| HttpException(sprintf "No API route found at path %A %s" req.method req.path, Status.Code.NotFound)
+        sprintf "No API route found at path %A %s" req.method req.path
+        |> notFound
+        |> raise
+
     | p when publicRegex.IsMatch p ->
-        // TODO: Check if file exists, throw exception if it doesn't
-        raise <| System.NotImplementedException("Public path not implemented")
+        // User is requesting a file from the public folder
+        browseFile (Path.Combine(Folder.publicFolder, "../")) req.path
+        // raise <| System.NotImplementedException("Public path not implemented")
+
     | p when faviconRegex.IsMatch p ->
         // Some browsers automatically send a request to /favicon.ico, despite what you might specify in your html.
-        raise <| System.NotImplementedException("Favicon path not implemented")
+        browseFile Folder.publicFolder "images/favicon-16x16.png"
+
     | _ ->
         // Wildcard, send the index.html and let the client figure out its own 404s
         let indexPath = System.IO.Path.Combine(Folder.publicFolder, "index.html")

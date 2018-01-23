@@ -11,4 +11,4 @@ let publicFolder =
     |> Seq.tryFind Directory.Exists
     |> function
     | None -> failwithf "Could not find path to public folder."
-    | Some s -> s
+    | Some s -> Path.GetFullPath s
