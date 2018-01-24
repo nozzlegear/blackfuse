@@ -35,22 +35,6 @@ let errorHandler (err: Exception) (msg: string) ctx =
     >=> Writers.setMimeType Json.MimeType
     <| ctx
 
-
-let resolvePath (rootPath : string) (fileName : string) =
-    let fileName =
-      if Path.DirectorySeparatorChar.Equals('/') then fileName
-      else fileName.Replace('/', Path.DirectorySeparatorChar)
-    let calculatedPath =
-      Path.Combine(rootPath, fileName.TrimStart([| Path.DirectorySeparatorChar; Path.AltDirectorySeparatorChar |]))
-      |> Path.GetFullPath
-
-    printfn "CALCULATED PATH IS %s" calculatedPath
-    printfn "ROOT PATH IS %s" rootPath
-
-    if calculatedPath.StartsWith rootPath then
-      calculatedPath
-    else raise <| Exception("File canonalization issue.")
-
 let wildcardRoute = request (fun req ->
     let apiRegex = Regex "(?i)^/?api/"
     let publicRegex = Regex "(?i)^/?public/.*"
