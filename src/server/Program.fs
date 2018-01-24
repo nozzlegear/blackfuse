@@ -65,8 +65,21 @@ let wildcardRoute = request (fun req ->
 
     | p when publicRegex.IsMatch p ->
         // User is requesting a file from the public folder
-        browseFile (Path.Combine(Folder.publicFolder, "../")) req.path
-        // raise <| System.NotImplementedException("Public path not implemented")
+        // Trim the leading slash from req.path, else Path.Combine will ignore everything and just return the req.path because it looks absolute.
+        let pathWithoutSlash = if req.path.StartsWith "/" then req.path.Substring 1 else req.path
+        let filename = Path.Combine(Folder.publicFolder, "../", pathWithoutSlash)
+
+        if not <| File.Exists filename
+        then raise <| notFound (sprintf "File %s does not exist." p)
+        else
+            let mime, compression =
+                Path.GetExtension filename
+                |> Suave.Writers.defaultMimeTypesMap
+                |> Option.map (fun m -> m.name, m.compression)
+                |> Option.defaultValue ("application/octet-stream", false)
+
+            sendFile filename compression
+            >=> Writers.setMimeType mime
 
     | p when faviconRegex.IsMatch p ->
         // Some browsers automatically send a request to /favicon.ico, despite what you might specify in your html.
