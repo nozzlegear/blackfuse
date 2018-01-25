@@ -20,6 +20,3 @@ let private navbar': React.ComponentClass<_> =
 let navbar (props: IProps list) =
     let propList = keyValueList CaseRules.LowerFirst props
     R.from navbar' propList []
-
-type IButtonProps =
-  | Text of string
