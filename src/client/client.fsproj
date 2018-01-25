@@ -28,12 +28,14 @@
     <Compile Include="stores/Auth.fs" />
     <Compile Include="stores/Nav.fs" />
     <Compile Include="stores/Billing.fs" />
+    <Compile Include="stores/Home.fs" />
     <Compile Include="Router.fs" />
     <Compile Include="Components.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />
     <Compile Include="pages/auth/CompleteOauth.fs" />
     <Compile Include="pages/billing/GetUrl.fs" />
     <Compile Include="pages/billing/Result.fs" />
+    <Compile Include="pages/home/Index.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

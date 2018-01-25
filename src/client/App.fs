@@ -8,7 +8,6 @@ module R = Fable.Helpers.React
 module Nav = Fable.Import.ReactMaterialNavbar
 module Icon = Fable.Import.ReactIcons
 module Sidebar = Fable.Import.ReactSidebar
-module Dialog = Fable.Import.ReactWinDialog
 module NavStore = Stores.Nav
 module AuthStore = Stores.Auth
 
@@ -60,21 +59,6 @@ let sidebar () =
         Sidebar.OnSetOpen NavStore.setNavIsOpen
     ]
 
-let dialog () =
-    let props = [
-        Dialog.Title "Henlo World"
-        Dialog.PrimaryText "This doesn't do anything"
-        Dialog.SecondaryText "Close"
-        Dialog.Open <| Mobx.get NavStore.dialogIsOpen
-        Dialog.OnSecondaryClick (ignore >> NavStore.closeDialog)
-    ]
-    let children = [
-        R.div [] [
-            R.h1 [] [R.str "Hello world, you're inside the dialog"]
-        ]
-    ]
-    Dialog.dialog props children
-
 let body = R.div [Id "body"]
 
 let withNav child =
@@ -90,21 +74,6 @@ let withNav child =
 let withoutNav child =
     R.div [Id "minimal"] [
         body [child]
-    ]
-
-let DashboardPage dict =
-    // User can only reach this page if logged in
-    let session = Mobx.get Stores.Auth.session |> Option.get
-
-    R.div [] [
-        dialog ()
-        R.h1 [] [
-            R.str <| sprintf "Hello. You're currently logged in. Your shop is %s at %s." (Option.toString session.shopName) (Option.toString session.myShopifyUrl)
-        ]
-        R.str "You're on the dashboard page."
-        R.button [Type "button"; OnClick (ignore >> NavStore.openDialog)] [
-            R.str "Click to open the dialog"
-        ]
     ]
 
 let appRoutes: Router.Route list =
@@ -123,7 +92,7 @@ let appRoutes: Router.Route list =
 
     [
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
-            Router.route Paths.Client.home DashboardPage
+            Router.route (Paths.Client.home + ":page?") Pages.Home.Index.Page
         ]
         Router.group withoutNav [
             Router.route Paths.Client.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login

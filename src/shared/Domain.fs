@@ -1,5 +1,6 @@
 module Domain
 
+open System
 open Fable.Validation.Core
 
 type ErrorResponse =
@@ -44,6 +45,33 @@ type SessionToken =
       shopifyChargeId = user.shopifyChargeId
       created = user.created
       exp = exp }
+
+/// Represent's a Shopify order's status.
+type OrderStatus =
+  | Open
+  | Closed of DateTime
+
+/// Represent's a Shopify order's line item.
+type LineItem =
+  { id: int64
+    quantity: int
+    name: string }
+
+/// Represents a Shopify customer.
+type Customer =
+  { id: int64
+    firstName: string
+    lastName: string }
+
+/// Represents a Shopify order. ShopifySharp can't be used on the frontend, and we wouldn't want to send the entire order object anyway, so this record holds just the order data we need.
+type Order =
+  { id: int64
+    name: string
+    lineItems: LineItem list
+    customer: Customer
+    dateCreated: DateTime
+    status: OrderStatus
+    totalPriceUsd: decimal }
 
 type SessionTokenResponse =
   { token: string }
