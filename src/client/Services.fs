@@ -65,14 +65,14 @@ module Auth =
     let createOauthUrl (myShopifyDomain: string) =
         let apiUrl = sprintf "%s?domain=%s" Paths.Api.Auth.createUrl myShopifyDomain
 
-        sendRequest apiUrl HttpMethod.GET None
+        sendRequest apiUrl HttpMethod.POST None
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
     let loginOrRegister rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
-        |> sendRequest Paths.Api.Auth.loginOrRegister HttpMethod.POST
+        |> sendRequest Paths.Api.Auth.loginOrRegister HttpMethod.PUT
         |> getResponse
 
 module Billing =
