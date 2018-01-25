@@ -1,7 +1,7 @@
 module Domain
 
 open System
-open Fable.Validation.Core
+open Validation
 
 type ErrorResponse =
     { statusCode: int

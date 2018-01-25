@@ -9,8 +9,8 @@
     <Compile Include="../shared/Option.fs" />
     <Compile Include="../shared/Date.fs" />
     <Compile Include="../shared/Constants.fs" />
-    <Compile Include="../shared/Domain.fs" />
     <Compile Include="../shared/Validation.fs" />
+    <Compile Include="../shared/Domain.fs" />
     <Compile Include="../shared/Paths.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="Errors.fs" />
