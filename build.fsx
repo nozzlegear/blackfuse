@@ -8,7 +8,10 @@
 open Fake
 open System
 open System.IO
-open System.Threading.Tasks
+
+module Option = 
+    /// Option.defaultValue doesn't work on Linux? Use this as a polyfill.
+    let withDefaultValue v o = match o with | Some x -> x | None -> v
 
 let mutable dotnetExePath = "dotnet"
 // let version = Constants.version
@@ -139,7 +142,7 @@ Target "Run" (fun _ ->
         envFile
         |> Option.bind (fun e -> e.TryFind "APP_DOMAIN")
         |> Option.map addProtocol
-        |> Option.defaultValue (sprintf "http://%s:%d" ipAddress port)
+        |> Option.withDefaultValue (sprintf "http://%s:%d" ipAddress port)
         |> Diagnostics.Process.Start
         |> ignore
     }
