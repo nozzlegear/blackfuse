@@ -23,9 +23,3 @@ let navbar (props: IProps list) =
 
 type IButtonProps =
   | Text of string
-
-let DefaultButton: React.ComponentClass<_> =
-  import "DefaultButton" "office-ui-fabric-react/lib/components/button"
-
-let inline defaultButton (props: IButtonProps list) c =
-  R.from DefaultButton (keyValueList CaseRules.LowerFirst props) c
