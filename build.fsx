@@ -19,6 +19,8 @@ let deployDir = "./deploy" |> FullName
 let clientDir = "./src/client" |> FullName
 let serverDir = "./src/server" |> FullName
 
+let resolve path = Path.Combine(__SOURCE_DIRECTORY__, path)
+
 let run' timeout cmd args dir =
     if execProcess (fun info ->
         info.FileName <- cmd
@@ -106,7 +108,7 @@ Target "Restore" (fun _ ->
 
 Target "Build" (fun _ ->
     let dotnet = async { runDotnet __SOURCE_DIRECTORY__ "build" }
-    let yarn = async { run yarnTool "build" __SOURCE_DIRECTORY__ }
+    let yarn = async { runDotnet (resolve "src/client") "fable yarn-run build" }
 
     [dotnet; yarn]
     |> Async.Parallel
@@ -156,12 +158,14 @@ Target "Run" (fun _ ->
 Target "All" DoNothing
 
 "Clean"
-    ==> "InstallDotNetCore"
     // ==> "SyncConstants"
     ==> "Restore"
     ==> "All"
     ==> "LoadEnvironment"
     ==> "Run"
+
+"Clean"
+    ==> "InstallDotNetCore"
 
 "All"
     ==> "Build"
