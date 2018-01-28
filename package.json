@@ -2,11 +2,8 @@
   "name": "blackfuse",
   "private": true,
   "scripts": {
-    "barrel": "echo 'No barrels configured'",
     "build": "webpack -p",
-    "watch": "webpack-dev-server",
-    "prebuild": "npm run barrel",
-    "prewatch": "npm run prebuild"
+    "watch": "webpack-dev-server"
   },
   "repository": {
     "type": "git",
@@ -45,11 +42,8 @@
     "jwt-simple": "^0.5.1",
     "mobx": "^3.3.1",
     "mobx-react": "^4.3.4",
-    "node-uuid": "^1.4.7",
-    "office-ui-fabric-react": "^5.21.2",
-    "prop-types": "~15.5.0",
+    "prop-types": "^15.6.0",
     "purecss": "^0.6.2",
-    "raven-js": "^3.17.0",
     "react": "16.0.0",
     "react-document-title": "^2.0.3",
     "react-dom": "16.0.0",
@@ -58,8 +52,6 @@
     "react-popover": "^0.4.4",
     "react-router": "3",
     "react-sidebar": "^2.3.2",
-    "react-win-dialog": "^1.4.0",
-    "react-win-pivot": "^1.1.1",
     "route-matcher": "^0.1.0",
     "typebase.css": "^0.5.0",
     "utilities.styl": "^1.8.1"

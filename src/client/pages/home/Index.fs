@@ -8,7 +8,6 @@ module R = Fable.Helpers.React
 module P = R.Props
 module C = Components
 module S = Stores.Home
-module Dialog = Fable.Import.ReactWinDialog
 
 [<Pojo>]
 type RouteDict = { page: int option }
