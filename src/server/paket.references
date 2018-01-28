@@ -4,6 +4,5 @@ jose-jwt
 FSharp.Core
 status
 newtonsoft.json
-fable.validation
 shopifysharp
 davenport.fsharp

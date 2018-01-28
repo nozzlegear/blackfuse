@@ -85,11 +85,12 @@ module Requests =
       { rawQueryString: string }
       with
       member x.Validate () =
-        fast <| fun t ->
-          { rawQueryString =
-              t.Test "rawQueryString" x.rawQueryString
-              |> t.NotBlank "cannot be empty"
-              |> t.End }
+        [
+          onProperty "rawQueryString" x.rawQueryString
+          |> notBlank None
+          |> validate
+        ]
+        |> toResult x
       static member Validate (data: CompleteShopifyOauth) =
         data.Validate()
 

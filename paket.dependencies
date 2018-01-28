@@ -13,7 +13,6 @@ nuget Fable.Import.Browser
 nuget Fable.React
 clitool dotnet-fable
 nuget Fable.PowerPack
-nuget fable.validation
 nuget shopifysharp
 nuget davenport.fsharp
 
