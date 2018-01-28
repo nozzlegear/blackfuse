@@ -17,7 +17,6 @@
     <Compile Include="import/Fable.Import.Mobx.fs" />
     <Compile Include="import/Fable.Import.MobxReact.fs" />
     <Compile Include="import/Fable.Import.History.fs" />
-    <Compile Include="import/Fable.Import.RouteMatcher.fs" />
     <Compile Include="import/Fable.Import.JsCookie.fs" />
     <Compile Include="import/Fable.Import.JwtSimple.fs" />
     <Compile Include="Utils.fs" />
@@ -26,6 +25,7 @@
     <Compile Include="stores/Nav.fs" />
     <Compile Include="stores/Billing.fs" />
     <Compile Include="stores/Home.fs" />
+    <Compile Include="PathScan.fs" />
     <Compile Include="Router.fs" />
     <Compile Include="Components.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />

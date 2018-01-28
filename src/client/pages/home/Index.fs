@@ -9,17 +9,10 @@ module P = R.Props
 module C = Components
 module S = Stores.Home
 
-[<Pojo>]
-type RouteDict = { page: int option }
-
-let Page (dict: obj) =
-    let betterDict = dict :?> Map<string, obj>
-
-    Browser.console.log("Got page dictionary", betterDict)
-
+let Page (page: int) =
     fun _ ->
 
-        R.div [] [
+        R.div [] [ 
             // match Mobx.get S.orders with
             // |
             // R.h1 [] [
@@ -29,6 +22,9 @@ let Page (dict: obj) =
             // R.button [Type "button"; OnClick (ignore >> NavStore.openDialog)] [
             //     R.str "Click to open the dialog"
             // ]
-            R.str "Temp"
+            sprintf "You're on home page %i." page
+            |> R.str
         ]
     |> MobxReact.Observer
+
+let PageZero () = Page 0

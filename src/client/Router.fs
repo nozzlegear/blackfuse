@@ -7,17 +7,21 @@ module R = Fable.Helpers.React
 module P = R.Props
 module mobx = Fable.Import.Mobx
 
-type RouteResult = obj -> React.ReactElement
+type GroupContainerRenderer = React.ReactElement -> React.ReactElement
 
-type OnBeforeEnter = Browser.Location -> string option
+type RouteRenderer = unit -> React.ReactElement
+
+type RouteMatcher = string -> RouteRenderer option
+
+type GuardFunc = Browser.Location -> string option
 
 // Group (fun child -> R.div [] [child]) [
 //   Route ("/", fun _ -> R.div [] [R.str "home page"])
 //   Route ("/test", fun _ -> R.div [] [R.str "/test page"])
 // ]
 type Route =
-    | Route of string * OnBeforeEnter option * RouteResult
-    | Group of (React.ReactElement -> React.ReactElement) * OnBeforeEnter option * Route list
+    | Route of RouteMatcher * GuardFunc option
+    | Group of GroupContainerRenderer * GuardFunc option * Route list
 
 let location = mobx.boxedObservable Browser.window.location
 
@@ -39,9 +43,9 @@ let go = history.go
 
 let canGo = history.canGo
 
-let rec tryMatchRoute currentPath (route: Route): (obj * OnBeforeEnter * (obj -> React.ReactElement)) option =
+let rec tryMatchRoute currentPath (route: Route): (RouteRenderer * GuardFunc) option =
     match route with
-    | Group (getContainerElement, onBeforeEnterGroup', childRoutes) ->
+    | Group (renderGroupContainer, groupGuard, childRoutes) ->
         let matchedRoutes =
             childRoutes
             |> Seq.map (tryMatchRoute currentPath)
@@ -49,11 +53,11 @@ let rec tryMatchRoute currentPath (route: Route): (obj * OnBeforeEnter * (obj ->
             |> Seq.map Option.get
 
         match Seq.tryHead matchedRoutes with
-        | Some (dict, onBeforeEnterChild, getChildElement) ->
-            let onBeforeEnterGroup = onBeforeEnterGroup' |> Option.defaultValue (fun _ -> None)
+        | Some (render, onBeforeEnterChild) ->
+            let onBeforeEnterGroup = Option.defaultValue (fun _ -> None) groupGuard
 
-            //Combine the two onBeforeEnter functions
-            let onBeforeEnter: OnBeforeEnter = fun loc ->
+            //Combine the two guard functions
+            let onBeforeEnter: GuardFunc = fun loc ->
                 match onBeforeEnterGroup loc with
                 | Some newLoc -> Some newLoc
                 | None ->
@@ -61,49 +65,73 @@ let rec tryMatchRoute currentPath (route: Route): (obj * OnBeforeEnter * (obj ->
                     | Some newLoc -> Some newLoc
                     | None -> None
 
-            Some (createEmpty, onBeforeEnter, (fun _ -> getChildElement dict |> getContainerElement))
+            Some (render >> renderGroupContainer, onBeforeEnter)
         | None -> None
-    | Route (routePath, onBeforeEnter', getReactElement) ->
-        let routeMatcher = RouteMatcher.create routePath
+    | Route (routeMatcher, guard) ->
+        routeMatcher currentPath
+        |> Option.map (fun renderer -> 
+            let onBeforeEnter: GuardFunc = Option.defaultValue (fun _ -> None) guard
 
-        match routeMatcher.parse currentPath with
-        | Some dict ->
-            let onBeforeEnter: OnBeforeEnter = onBeforeEnter' |> Option.defaultValue (fun _ -> None)
-            Some (dict, onBeforeEnter, getReactElement)
-        | None -> None
+            renderer, onBeforeEnter
+        )
 
-type MatchedRoute = obj * (obj -> React.ReactElement)
-
-let router (routes: Route list) (notFound: RouteResult) =
-    let matchedRoute = Mobx.boxedObservable<MatchedRoute> (createEmpty, fun _ -> R.noscript [] [])
-    let getChildMatch (loc: Browser.Location): MatchedRoute =
+let router (routes: Route list) (notFound: RouteRenderer) =
+    let matchedRoute = Mobx.boxedObservable<RouteRenderer> (fun _ -> R.noscript [] [])
+    let getChildMatch (loc: Browser.Location): RouteRenderer =
         routes
         |> Seq.map (tryMatchRoute loc.pathname)
         |> Seq.filter Option.isSome
         |> Seq.map Option.get
         |> Seq.tryHead
-        |> function
-            | Some (dict, onBeforeEnter, routeResult) ->
-                match onBeforeEnter loc with
-                | None -> dict, routeResult
-                | Some newLoc ->
-                    // if the beforeEnter function returns Some we need to short-circuit this route and replace it with the given one
-                    createEmpty, fun _ -> R.noscript [P.Ref (fun _ -> replace newLoc |> ignore)] []
-            | None -> createEmpty, notFound
-
+        |> Option.map (fun (render, guard) -> 
+            guard loc 
+            // if the guard function returns Some we need to short-circuit this route and replace it with the given one
+            |> Option.map (fun newLoc -> (fun _ -> R.noscript [P.Ref (fun _ -> replace newLoc)] []))
+            |> Option.defaultValue render 
+        )
+        |> Option.defaultValue notFound
+    
     // Match the current location, then let the observable handle changes
     Mobx.get location |> getChildMatch |> Mobx.set matchedRoute
     Mobx.observe location (fun loc -> getChildMatch loc.newValue |> Mobx.set matchedRoute)
 
     fun _ ->
-        let routeDict, getRouteChild = Mobx.get matchedRoute
-
-        getRouteChild routeDict
+        Mobx.get matchedRoute
+        |> fun render -> render()
     |> MobxReact.Observer
 
-let route path handler = Route (path, None, handler)
+let trimTrailingSlash (s: string) = 
+    if s.EndsWith "/" 
+    then s.TrimEnd (char "/") 
+    else s
 
-let routeWithGuard path guard handler = Route (path, Some guard, handler)
+let private stringMatch routePath handler currentPath = 
+    match System.String.Equals(trimTrailingSlash routePath, trimTrailingSlash currentPath, System.StringComparison.OrdinalIgnoreCase) with 
+    | true -> Some handler 
+    | false -> None
+
+[<PassGenerics>]
+let private scanMatch routePath handler currentPath =
+    let makeRenderer i = fun () -> handler i
+
+    PathScan.scan routePath currentPath 
+    // Try again, this time trimming the trailing slash 
+    |> Option.orElseWith (fun _ -> PathScan.scan routePath (trimTrailingSlash currentPath))
+    |> Option.map makeRenderer
+
+let route routePath handler = 
+    Route(stringMatch routePath handler, None)
+
+[<PassGenerics>]
+let routeScan routePath handler = 
+    Route(scanMatch routePath handler, None)
+
+let routeWithGuard routePath guard handler = 
+    Route (stringMatch routePath handler, Some guard)
+
+[<PassGenerics>]
+let routeScanWithGuard routePath guard handler = 
+    Route(scanMatch routePath handler, Some guard)
 
 let group handler routes = Group (handler, None, routes)
 

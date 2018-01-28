@@ -90,20 +90,28 @@ let appRoutes: Router.Route list =
         JsCookie.remove Constants.CookieName
         Some Paths.Client.Auth.login
 
+    let emptyPage _ = R.noscript [] []        
+
     [
+        // Redirect requests to the / page to /dashboard instead. This allows using route variables on the dashboard because it doesn't think all URL segments are just variables.
+        Router.routeWithGuard "/" (fun _ -> Some Paths.Client.home) emptyPage
+        Router.routeWithGuard Paths.Client.Auth.logout logout emptyPage
+
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
-            Router.route (Paths.Client.home + ":page?") Pages.Home.Index.Page
+            Router.route Paths.Client.home Pages.Home.Index.PageZero
+            Router.routeScan Paths.Client.homeWithPageScan Pages.Home.Index.Page
         ]
+
         Router.group withoutNav [
             Router.route Paths.Client.Auth.login <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Login
             Router.route Paths.Client.Auth.register <| Pages.Auth.LoginOrRegister.Page Pages.Auth.LoginOrRegister.Register
             Router.route Paths.Client.Auth.completeOAuth <| Pages.Auth.CompleteOauth.Page
         ]
+
         Router.groupWithGuard withoutNav (requireAuth WithoutSubscription) [
             Router.route Paths.Client.Billing.index <| Pages.Billing.GetUrl.Page
             Router.route Paths.Client.Billing.result <| Pages.Billing.Result.Page
         ]
-        Router.routeWithGuard Paths.Client.Auth.logout logout (fun _ -> R.noscript [] [])
     ]
 
 let notFoundPage _ =
