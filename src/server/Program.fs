@@ -8,6 +8,7 @@ open Domain
 open System.Text.RegularExpressions
 open Suave.Files
 open System.IO
+open Domain.Requests
 
 let errorHandler (err: Exception) (msg: string) ctx =
     let errorResponse =
@@ -85,6 +86,7 @@ let main _ =
     let allRoutes =
         Routes.Auth.routes
         @Routes.Billing.routes
+        @Routes.Orders.routes
         @Routes.Webhooks.routes
         @[wildcardRoute] // Wildcard should come last
         |> choose

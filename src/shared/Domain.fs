@@ -71,7 +71,7 @@ type Order =
     customer: Customer
     dateCreated: DateTime
     status: OrderStatus
-    totalPriceUsd: decimal }
+    totalPrice: decimal }
 
 type SessionTokenResponse =
   { token: string }
@@ -96,3 +96,9 @@ module Requests =
 
     type GetShopifyOauthUrlResult =
       { url: string }
+  
+  module Orders =
+    type ListOrdersResponse = 
+      { page: int
+        limit: int
+        orders: Order list }

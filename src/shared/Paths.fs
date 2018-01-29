@@ -23,6 +23,9 @@ module Api =
         let createUrl = "/api/v1/billing/create-url"
         let createOrUpdateCharge = "/api/v1/billing"
 
+    module Orders = 
+        let list = "/api/v1/orders"
+
     module User =
         let getInfo = "/api/v1/user"
 

@@ -5,6 +5,7 @@ open Fable.PowerPack
 open JsInterop
 open Domain
 open Fable.PowerPack.Fetch
+open Domain.Requests.Dashboard
 
 let getResponse (request: Fable.Import.JS.Promise<Response>) = promise {
     let! result = Promise.result request
@@ -87,3 +88,12 @@ module Billing =
         |> Some
         |> sendRequest Paths.Api.Billing.createOrUpdateCharge HttpMethod.PUT
         |> getResponse
+
+module Orders = 
+    open Domain.Requests.Orders
+
+    let listOrders page limit = 
+        let url = sprintf "%s?limit=%i&page=%i" Paths.Api.Orders.list limit page
+        sendRequest url HttpMethod.GET None 
+        |> getResponse 
+        |> Promise.map (Result.map ofJson<ListOrdersResponse>) 

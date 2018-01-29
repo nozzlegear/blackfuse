@@ -9,10 +9,30 @@ module P = R.Props
 module C = Components
 module S = Stores.Home
 
+let loadPage page = promise {
+    ()
+}
+
 let Page (page: int) =
+    let loadAfterMount() = 
+        R.div [] [
+            R.progress [] []
+            C.AfterMount (fun _ -> loadPage page |> Promise.start)
+        ]
+
     fun _ ->
 
+        let body = 
+            match Mobx.get S.orders with 
+            | None -> loadAfterMount()
+            | Some (i, _) when i <> page -> loadAfterMount()
+            | Some (_, orders) -> R.h1 [] [sprintf "%i orders loaded" (Seq.length orders) |> R.str]
+
         R.div [] [ 
+            body
+
+                // TODO: Load orders for this page
+
             // match Mobx.get S.orders with
             // |
             // R.h1 [] [

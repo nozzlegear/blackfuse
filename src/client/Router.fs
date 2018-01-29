@@ -16,8 +16,8 @@ type RouteMatcher = string -> RouteRenderer option
 type GuardFunc = Browser.Location -> string option
 
 // Group (fun child -> R.div [] [child]) [
-//   Route ("/", fun _ -> R.div [] [R.str "home page"])
-//   Route ("/test", fun _ -> R.div [] [R.str "/test page"])
+//   Route (fun path -> if path = "/" then Some <| fun _ -> R.div [] [R.str "home page"] else None)
+//   Route (fun path -> if path = "/test" then Some <| fun _ -> R.div [] [R.str "/test page"] else None)
 // ]
 type Route =
     | Route of RouteMatcher * GuardFunc option
@@ -96,8 +96,8 @@ let router (routes: Route list) (notFound: RouteRenderer) =
     Mobx.observe location (fun loc -> getChildMatch loc.newValue |> Mobx.set matchedRoute)
 
     fun _ ->
-        Mobx.get matchedRoute
-        |> fun render -> render()
+        let render = Mobx.get matchedRoute
+        render()
     |> MobxReact.Observer
 
 let trimTrailingSlash (s: string) = 
@@ -114,6 +114,7 @@ let private stringMatch routePath handler currentPath =
 let private scanMatch routePath handler currentPath =
     let makeRenderer i = fun () -> handler i
 
+    // TODO: what happens when the pathscan ends with a slash but the currentpath does not?
     PathScan.scan routePath currentPath 
     // Try again, this time trimming the trailing slash 
     |> Option.orElseWith (fun _ -> PathScan.scan routePath (trimTrailingSlash currentPath))
