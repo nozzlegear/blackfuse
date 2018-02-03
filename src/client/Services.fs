@@ -5,7 +5,6 @@ open Fable.PowerPack
 open JsInterop
 open Domain
 open Fable.PowerPack.Fetch
-open Domain.Requests.Dashboard
 
 let getResponse (request: Fable.Import.JS.Promise<Response>) = promise {
     let! result = Promise.result request
