@@ -98,8 +98,8 @@ let appRoutes: Router.Route list =
         Router.routeWithGuard Paths.Client.Auth.logout logout emptyPage
 
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
-            Router.route Paths.Client.home Pages.Home.Index.PageZero
-            Router.routeScan Paths.Client.homeWithPageScan Pages.Home.Index.Page
+            Router.route Paths.Client.home Pages.Dashboard.Index.PageZero
+            Router.routeScan Paths.Client.homeWithPageScan Pages.Dashboard.Index.Page
         ]
 
         Router.group withoutNav [

@@ -100,5 +100,6 @@ module Requests =
   module Orders =
     type ListOrdersResponse = 
       { page: int
+        totalPages: int
         limit: int
         orders: Order list }
