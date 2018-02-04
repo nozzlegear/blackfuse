@@ -67,18 +67,40 @@ let Instruction text =
         R.p [] [R.str text]
     ]
 
+let PureGrid classNames (attributes: Fable.Helpers.React.Props.IHTMLProp list) = 
+    let atts = attributes@[P.ClassName <| sprintf "pure-g %s" classNames]    
+    R.div atts
+
+let PureUnit fractionOf24 classNames (attributes: Fable.Helpers.React.Props.IHTMLProp list) = 
+    let atts = attributes@[P.ClassName <| sprintf "pure-u-%i-24 %s" fractionOf24 classNames]
+    R.div atts
+
+let LeftRightSplit leftSide rightSide = 
+    let leftSideSize, leftSideChild = leftSide
+    let rightSideSize, rightSideChild = rightSide 
+
+    PureGrid "left-right-split" [] [
+        PureUnit leftSideSize "left" [] [leftSideChild]
+        PureUnit rightSideSize "right" [] [rightSideChild]
+    ]
+
+let Error msg = R.p [P.ClassName "error red"] [R.str msg]
+
+/// Same as the `Error` function, but centers the error message in a div with .text-center class.
+let ErrorCentered msg = R.div [P.ClassName "text-center"] [Error msg]
+
 /// Runs the given function after each React render cycle, whether mounting or updating.
-let AfterRender f =
+let AfterRender key f =
     let func (el: Browser.Element) =
         match Option.ofNullable el with
         | Some _ -> f ()
         | None -> ()
 
-    R.noscript [P.Ref func] []
+    R.noscript [P.Key key; P.Ref func] []
 
 /// Runs the given function after the first mount of the parent React component or element.
 /// NOTE: This must be created *outside* of the parent's render cycle, i.e. it should not be created inside a render method or MobxReact.Observer function.
-let AfterMount f =
+let AfterMount key f =
     let mutable mounted = false
     let func el =
         match Option.ofNullable el with
@@ -87,4 +109,4 @@ let AfterMount f =
             if not mounted then f()
             mounted <- true
 
-    R.noscript [P.Ref func] []
+    R.noscript [P.Key key; P.Ref func] []

@@ -36,7 +36,7 @@ let completeBillingSetup _ =
         |> Promise.start
 
 let Page dict =
-    let completer = C.AfterMount completeBillingSetup
+    let completer = C.AfterMount "complete-billing" completeBillingSetup
 
     fun _ ->
         let error, loading = Mobx.get S.error, Mobx.get S.loading

@@ -31,6 +31,11 @@ let listOrders = withUser <| fun user req ctx -> async {
     let filter = OrderFilter()
     filter.Limit <- System.Nullable limit 
     filter.Page <- System.Nullable page
+    filter.Status <- "all"
+
+    let! totalOrders = 
+        service.CountAsync filter 
+        |> Async.AwaitTask 
 
     let! orders = 
         service.ListAsync filter 
@@ -42,13 +47,14 @@ let listOrders = withUser <| fun user req ctx -> async {
                 |> List.map (fun li -> 
                     { id = li.Id.Value
                       quantity = if li.Quantity.HasValue then li.Quantity.Value else 0 
-                      name = li.Name }
-                )
+                      name = li.Name })
 
-            let customer: Domain.Customer = 
-                { id = order.Customer.Id.Value 
-                  firstName = order.Customer.FirstName
-                  lastName = order.Customer.LastName }
+            let customer: Domain.Customer option = 
+                Option.ofNullable order.Customer 
+                |> Option.map (fun cust ->
+                    { id = cust.Id.Value 
+                      firstName = cust.FirstName
+                      lastName = cust.LastName })
 
             let output: Domain.Order = 
                 { id = order.Id.Value
@@ -62,10 +68,16 @@ let listOrders = withUser <| fun user req ctx -> async {
             output
         )
 
+    let totalPages = if totalOrders % limit > 0 then (totalOrders / limit) + 1 else totalOrders / limit
+
     return!
-        { limit = limit; page = page; orders = List.ofSeq orders }
-        |> Json.toJson
-        |> Successful.ok
+        { limit = limit 
+          page = page 
+          orders = List.ofSeq orders 
+          totalOrders = totalOrders
+          totalPages = totalPages }
+        |> Json.stringify
+        |> Successful.OK
         >=> Writers.setMimeType Json.MimeType
         <| ctx
 }

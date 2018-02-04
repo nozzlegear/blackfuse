@@ -68,7 +68,7 @@ type Order =
   { id: int64
     name: string
     lineItems: LineItem list
-    customer: Customer
+    customer: Customer option
     dateCreated: DateTime
     status: OrderStatus
     totalPrice: decimal }
@@ -100,6 +100,7 @@ module Requests =
   module Orders =
     type ListOrdersResponse = 
       { page: int
-        totalPages: int
         limit: int
+        totalPages: int
+        totalOrders: int
         orders: Order list }

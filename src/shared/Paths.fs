@@ -36,6 +36,7 @@ module Api =
 module Client =
     let home = "/dashboard"
     let homeWithPageScan = makeScan "/dashboard/%i" 
+    let homeWithPage = sprintf "/dashboard/%i"
 
     module Billing =
         let index = "/billing"

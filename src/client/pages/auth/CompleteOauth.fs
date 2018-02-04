@@ -35,7 +35,7 @@ let completeOauth _ =
         |> Promise.start
 
 let Page dict =
-    let oauthCompleter = C.AfterMount completeOauth
+    let oauthCompleter = C.AfterMount "complete-oauth" completeOauth
 
     fun _ ->
         let error, loading = Mobx.get S.OAuth.error, Mobx.get S.OAuth.loading
