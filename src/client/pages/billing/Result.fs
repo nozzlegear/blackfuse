@@ -47,7 +47,7 @@ let Page dict =
             | false, Some _ ->
                 Some
                 <| R.div [] [
-                    Router.link Paths.Client.Billing.index [P.ClassName "btn"] [
+                    Router.link Paths.Client.Billing.index None [P.ClassName "btn"] [
                         R.str "Try again."
                     ]
                 ]

@@ -24,8 +24,9 @@ let nav =
 
 let navMenu () =
     let link href text =
+        let afterNavigate () = Mobx.set NavStore.navIsOpen false
         R.div [] [
-            Router.link href [] [
+            Router.link href (Some afterNavigate) [] [
                 R.str text
             ]
         ]
@@ -124,7 +125,7 @@ let notFoundPage _ =
                         R.str "Sorry about that, but the page you are looking for doesn't exist."
                     ]
                     R.div [Id "rescue-button-container"] [
-                        Router.link Paths.Client.home [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
+                        Router.link Paths.Client.home None [Id "rescue-button"; ClassName "btn blue"] [R.str "Go to Dashboard"]
                     ]
                 ]
             ]

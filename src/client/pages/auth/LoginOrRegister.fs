@@ -70,12 +70,12 @@ let Page (pageType: PageType) dict =
                     | Register ->
                         [
                             R.str "Already have an account?"
-                            Router.link Paths.Client.Auth.login [] [R.str "Sign in!"]
+                            Router.link Paths.Client.Auth.login None [] [R.str "Sign in!"]
                         ]
                     | Login ->
                         [
                             R.str "No account? "
-                            Router.link Paths.Client.Auth.register [] [R.str "Get one!"]
+                            Router.link Paths.Client.Auth.register None [] [R.str "Get one!"]
                         ]
                     |> R.div []
                 ]

@@ -46,7 +46,7 @@ let Page dict =
             | false, Some _ ->
                 Some
                 <| R.div [] [
-                    Router.link Paths.Client.Auth.login [P.ClassName "btn"] [R.str "Try again."]
+                    Router.link Paths.Client.Auth.login None [P.ClassName "btn"] [R.str "Try again."]
                 ]
             | false, None -> Some oauthCompleter
 

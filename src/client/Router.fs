@@ -141,9 +141,10 @@ let group handler routes = Group (handler, None, routes)
 
 let groupWithGuard handler guard routes = Group (handler, Some guard, routes)
 
-let link href (props: P.IHTMLProp list) =
+let link href afterNavigate (props: P.IHTMLProp list) =
     let onClick (e: React.MouseEvent) =
         e.preventDefault()
         history.push href
+        afterNavigate |> Option.iter (fun f -> f())
 
     R.a (props@[P.Href href; P.OnClick onClick])
