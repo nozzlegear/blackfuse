@@ -30,4 +30,11 @@ let inline ofFunction (f: unit -> React.ReactElement): React.ReactElement = unbo
 /// let myButton () = R.button [] [sprintf "Counter value %i" mobxStore.counterValue |> R.str]
 /// let observer = R.observer (fun _ -> myButton())
 /// ```
-let Observer (f: unit -> React.ReactElement) = R.from mobxReact.Observer null [ofFunction f]
+let Observer (f: unit -> React.ReactElement) = 
+    let wrappedFunc () = 
+        try f()
+        with e ->
+            Browser.console.error("MobxReact.Observer caught an error and failed to render child function:", e)
+            R.noscript [] [] 
+
+    R.from mobxReact.Observer null [ofFunction wrappedFunc]

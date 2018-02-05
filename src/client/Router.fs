@@ -97,7 +97,10 @@ let router (routes: Route list) (notFound: RouteRenderer) =
 
     fun _ ->
         let render = Mobx.get matchedRoute
-        render()
+        try render()
+        with e -> 
+            Browser.console.error("Router failed to render matched route:", e)
+            R.noscript [] []
     |> MobxReact.Observer
 
 let trimTrailingSlash (s: string) = 
