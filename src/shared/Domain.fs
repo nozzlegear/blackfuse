@@ -8,6 +8,11 @@ type ErrorResponse =
       statusDescription: string
       message: string }
 
+type Subscription = 
+  { chargeId: int64 
+    planName: string 
+    price: decimal }
+
 type User = {
   /// A unique identifier used by CouchDB to lookup this record.
   id: string
@@ -20,7 +25,7 @@ type User = {
   shopifyAccessToken: string option
   myShopifyUrl: string option
   shopName: string option
-  shopifyChargeId: int64 option
+  subscription: Subscription option
 }
 
 /// A pared-down User object, containing only the data needed by the client. Should NEVER contain sensitive data like the user's password.
@@ -32,7 +37,7 @@ type SessionToken =
     shopId: int64
     myShopifyUrl: string option
     shopName: string option
-    shopifyChargeId: int64 option
+    subscription: Subscription option
     /// The date the SessionToken expires, in unix seconds (not JS milliseconds).
     exp: int64 }
   with
@@ -42,7 +47,7 @@ type SessionToken =
       myShopifyUrl = user.myShopifyUrl
       shopId = user.shopId
       shopName = user.shopName
-      shopifyChargeId = user.shopifyChargeId
+      subscription = user.subscription
       created = user.created
       exp = exp }
 

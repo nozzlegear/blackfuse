@@ -9,6 +9,7 @@ module C = Components
 let Page _ = 
     fun _ ->
         let user = Mobx.get Stores.Auth.session |> Option.get
+        let sub = user.subscription |> Option.get
         let domain = Option.get user.myShopifyUrl
 
         R.div [] [
@@ -23,6 +24,9 @@ let Page _ =
                 user.created
                 |> Date.fromUnixTimestamp
                 |> fun d -> R.p [] [R.str <| sprintf "Member since %s." (Date.toMediumDateString d)]
+
+                sprintf "%s: $%.2f/month" sub.planName sub.price
+                |> fun s -> R.p [] [R.str s]
 
                 R.p [] [R.str <| sprintf "User ID: %s" user.id]
 

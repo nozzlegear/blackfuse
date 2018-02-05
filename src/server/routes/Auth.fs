@@ -92,7 +92,7 @@ let loginOrRegister = request <| fun req ctx -> async {
               myShopifyUrl = Some shopUrl
               shopName = Some shop.Name
               shopId = shop.Id.Value
-              shopifyChargeId = None }
+              subscription = None }
             |> Database.createUser
 
     // Create webhooks if we're not on localhost (hooks can't be sent to localhost).

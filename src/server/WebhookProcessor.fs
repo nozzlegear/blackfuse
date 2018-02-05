@@ -67,7 +67,7 @@ let private handleAppUninstalled = Json.parseFromBody<Shop> >> fun shop -> async
         // Erase the user's access token, shopify charge, shop name and shop url, but keep their shop id so we can restore their
         // account if they ever reinstall the app.
         do!
-            ({ user with shopifyAccessToken = None; myShopifyUrl = None; shopifyChargeId = None; shopName = None })
+            ({ user with shopifyAccessToken = None; myShopifyUrl = None; subscription = None; shopName = None })
             |> Database.updateUser user.id user.rev
             |> Async.Ignore
 }

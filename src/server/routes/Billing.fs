@@ -9,7 +9,7 @@ open ShopifySharp
 open Errors
 
 let createUrl = withUser <| fun user req ctx -> async {
-    if Option.isSome user.shopifyChargeId
+    if Option.isSome user.subscription
     then raise <| HttpException("Your account is already subscribed!", Status.UnprocessableEntity)
 
     let service = RecurringChargeService(Option.get user.myShopifyUrl, Option.get user.shopifyAccessToken)
@@ -62,7 +62,11 @@ let createOrUpdateCharge = withUser <| fun user req ctx -> async {
         | s -> raise <| HttpException(sprintf "You must accept the subscription charge to use %s. Charge status: %s." Constants.AppName s, Status.PreconditionFailed)
 
     // Update the user's database model
-    let! user = Database.updateUser user.id user.rev ({user with shopifyChargeId = Some chargeId})
+    let subscription: Domain.Subscription = 
+        { chargeId = chargeId 
+          planName = charge.Name
+          price = charge.Price.Value }
+    let! user = Database.updateUser user.id user.rev ({user with subscription = Some subscription})
 
     return!
         Successful.OK "{}"

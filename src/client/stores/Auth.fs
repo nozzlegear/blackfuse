@@ -21,7 +21,7 @@ let isAuthenticated = mobx.computed (fun _ ->
 
 let hasSubscription = mobx.computed (fun _ ->
     mobx.get session
-    |> Option.map (fun s -> Option.isSome s.shopifyChargeId)
+    |> Option.map (fun s -> Option.isSome s.subscription)
     |> Option.defaultValue false
 )
 
