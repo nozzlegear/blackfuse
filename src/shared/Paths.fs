@@ -38,12 +38,15 @@ module Client =
     let homeWithPageScan = makeScan "/dashboard/%i" 
     let homeWithPage = sprintf "/dashboard/%i"
 
-    module Billing =
-        let index = "/billing"
-        let result = "/billing/result"
-
     module Auth =
         let login = "/auth/login"
         let logout = "/auth/logout"
         let register = "/auth/register"
         let completeOAuth = "/auth/complete-oauth"
+
+    module Billing =
+        let index = "/billing"
+        let result = "/billing/result"
+    
+    module User = 
+        let index = "/user"

@@ -33,6 +33,7 @@
     <Compile Include="pages/billing/GetUrl.fs" />
     <Compile Include="pages/billing/Result.fs" />
     <Compile Include="pages/dashboard/Index.fs" />
+    <Compile Include="pages/user/Index.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

@@ -76,7 +76,7 @@ let loginOrRegister = request <| fun req ctx -> async {
     let! shop =
         ShopService(shopUrl, accessToken).GetAsync()
         |> Async.AwaitTask
-
+    
     // Lookup user in database to see if we're creating a new user or logging in and updating an existing one.
     let! dbUser = Database.getUserByShopId <| shop.Id.GetValueOrDefault 0L
     let! user =

@@ -2,6 +2,7 @@ module Components
 
 open Fable.Core
 open Fable.Import
+open Fable.Import.React
 module R = Fable.Helpers.React
 module P = R.Props
 
@@ -110,3 +111,46 @@ let AfterMount key f =
             mounted <- true
 
     R.noscript [P.Key key; P.Ref func] []
+
+module InfoBox = 
+    type Props = private {
+        title: string 
+        side: React.ReactElement option 
+        content: React.ReactElement option 
+    }
+
+    let title s = 
+        { title = s
+          side = None
+          content = None }
+
+    let side e props = { props with side = Some e }
+
+    let content e props = { props with content = Some e }
+
+    let make props = 
+        let sideSize, contentSize = 
+            match props.side, props.content with 
+            | Some _, None 
+            | Some _, Some _ -> 6, 18
+            | None, Some _ -> 0, 24
+            | None, None -> 
+                Browser.console.warn("InfoBox.make was given no side or content elements. Props received:", props)
+                0, 0
+
+        R.div [P.ClassName "pure-g info-box"] [
+            props.side 
+            |> Option.map (fun side -> 
+                R.div [P.ClassName <| sprintf "pure-u-%i-24" sideSize] [side]
+            )
+            |> R.opt
+
+            props.content 
+            |> Option.map (fun content ->
+                R.div [P.ClassName <| sprintf "pure-u-%i-24" contentSize] [
+                    R.h3 [P.ClassName "info-box-title"] [R.str props.title]
+                    content
+                ]
+            )
+            |> R.opt
+        ]

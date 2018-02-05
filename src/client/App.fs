@@ -33,14 +33,9 @@ let navMenu () =
 
     R.div [] [
         R.menu [ClassName "nav-menu"] [
-            link Paths.Client.home "Open Orders"
-            link "#" "Closed Orders"
-            link "#" "Tracking Widget"
-            link "#" "Automation Rules"
-            link "#" "Help & Support"
+            link Paths.Client.home "All Orders"
             linebreak
-            link "#" "Account Settings"
-            link "#" "My Stages"
+            link Paths.Client.User.index "My Account"
             linebreak
             match Mobx.get AuthStore.isAuthenticated with
             | true -> Paths.Client.Auth.logout, "Sign out"
@@ -100,6 +95,8 @@ let appRoutes: Router.Route list =
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
             Router.route Paths.Client.home Pages.Dashboard.Index.PageOne
             Router.routeScan Paths.Client.homeWithPageScan Pages.Dashboard.Index.Page
+
+            Router.route Paths.Client.User.index Pages.User.Index.Page
         ]
 
         Router.group withoutNav [
