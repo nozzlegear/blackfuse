@@ -13,8 +13,7 @@ let Page _ =
         let domain = Option.get user.myShopifyUrl
 
         R.div [] [
-            R.h1 [] [R.str "User Account"]
-            R.hr []
+            C.PageHeader "User Account" None
 
             R.div [] [
                 R.h3 [] [R.str <| Option.get user.shopName]

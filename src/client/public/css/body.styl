@@ -30,6 +30,9 @@ hr {
 table {
     width 100%
 }
+hr {
+    margin 20px 0
+}
 .error {
     color red
     font-weight 600    
@@ -37,13 +40,21 @@ table {
 .react-sidebar-content {
     margin-top 64px // Bring the body content out from under the navbar
 }
-.left-right-split {
+.page-header {
     align-items center
+    h1 {
+        font-weight 400
+    }
     .left {
         text-align left 
     }    
     .right {
         text-align right     
+    }
+    .hr {
+        hr {
+            margin-top 0
+        }    
     }
 }
 main#contenthost {

@@ -82,7 +82,7 @@ let Page (page: int) =
                     ]
 
                 R.div [] [
-                    C.LeftRightSplit (18, R.h1 [] [R.str <| sprintf "%i Orders" o.totalOrders]) (6, pageSelector)
+                    C.PageHeader (sprintf "%i Orders" o.totalOrders) (Some pageSelector)
 
                     Mobx.get S.error 
                     |> Option.map Error
@@ -110,7 +110,10 @@ let Page (page: int) =
                         |> R.tbody []
                     ]
                     R.hr []
-                    C.LeftRightSplit (18, R.noscript [] []) (6, pageSelector)
+                    C.PureGrid "" [] [
+                        C.PureUnit 16 "" [] []
+                        C.PureUnit 8 "" [] [pageSelector]
+                    ]
                 ]
 
         R.div [] [ 

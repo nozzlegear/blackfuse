@@ -76,19 +76,29 @@ let PureUnit fractionOf24 classNames (attributes: Fable.Helpers.React.Props.IHTM
     let atts = attributes@[P.ClassName <| sprintf "pure-u-%i-24 %s" fractionOf24 classNames]
     R.div atts
 
-let LeftRightSplit leftSide rightSide = 
-    let leftSideSize, leftSideChild = leftSide
-    let rightSideSize, rightSideChild = rightSide 
-
-    PureGrid "left-right-split" [] [
-        PureUnit leftSideSize "left" [] [leftSideChild]
-        PureUnit rightSideSize "right" [] [rightSideChild]
-    ]
-
 let Error msg = R.p [P.ClassName "error red"] [R.str msg]
 
 /// Same as the `Error` function, but centers the error message in a div with .text-center class.
 let ErrorCentered msg = R.div [P.ClassName "text-center"] [Error msg]
+
+let PageHeader title rightElement = 
+    let leftSize, rightSize = 
+        match rightElement with 
+        | Some _ -> 16, 8
+        | None -> 24, 0
+
+    PureGrid "page-header" [] [
+        PureUnit leftSize "left" [] [R.h1 [P.ClassName" page-header-title"] [R.str title]]
+
+        match rightElement with 
+        | None -> None 
+        | Some r -> PureUnit rightSize "right" [] [r] |> Some
+        |> R.opt
+
+        PureUnit 24 "hr" [] [
+            R.hr []
+        ]
+    ]
 
 /// Runs the given function after each React render cycle, whether mounting or updating.
 let AfterRender key f =
