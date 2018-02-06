@@ -12,10 +12,10 @@ open Errors
 let createSession (user: Domain.User) = 
     { id = ""  // Will be created by CouchDB
       rev = "" // Will be created by CouchDB 
-      signature = "" // Will be created with Jwt.sign
+      signature = "" // Will be created with Session.sign
       created = DateTime.UtcNow
       user = ParedUser.FromUser user }
-    |> Jwt.sign 
+    |> Session.sign 
     |> Database.createSession
 
 let createSessionCookie (session: Session) = 

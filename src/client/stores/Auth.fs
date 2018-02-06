@@ -10,7 +10,10 @@ let token =
 let session = mobx.computed <| fun _ ->
     match mobx.get token with
     | Some t ->
-        Some <| Fable.Core.JsInterop.ofJson<Session> t
+        try Fable.Core.JsInterop.ofJson<Session> t |> Some 
+        with e -> 
+            Fable.Import.Browser.console.error("Failed to deserialize session string into Session object:", e)
+            None 
     | None -> None
 
 let isAuthenticated = mobx.computed (fun _ ->

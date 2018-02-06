@@ -8,7 +8,7 @@ open Operators
 open ShopifySharp
 open Errors
 
-let createUrl = withUser <| fun user req ctx -> async {
+let createUrl = withUserAndSession <| fun user _ _ ctx -> async {
     if Option.isSome user.subscription
     then raise <| HttpException("Your account is already subscribed!", Status.UnprocessableEntity)
 
@@ -30,7 +30,7 @@ let createUrl = withUser <| fun user req ctx -> async {
         <| ctx
 }
 
-let createOrUpdateCharge = withUser <| fun user req ctx -> async {
+let createOrUpdateCharge = withUserAndSession <| fun user session req ctx -> async {
     let body =
         req.rawForm
         |> Json.parseFromBody<Requests.OAuth.CompleteShopifyOauth>
@@ -67,11 +67,17 @@ let createOrUpdateCharge = withUser <| fun user req ctx -> async {
           planName = charge.Name
           price = charge.Price.Value }
     let! user = Database.updateUser user.id user.rev ({user with subscription = Some subscription})
-    let! session = {  }
+
+    // Update the user's session
+    let! sessionCookie = 
+        { session with user = Domain.ParedUser.FromUser user }
+        |> Database.updateSession session.id session.rev
+        |> Async.Map Routes.Auth.createSessionCookie
+
     return!
         Successful.OK "{}"
         >=> Writers.setMimeType Json.MimeType
-        >=> Cookie.setCookie (Routes.Auth.createSession user)
+        >=> Cookie.setCookie sessionCookie
         <| ctx
 }
 

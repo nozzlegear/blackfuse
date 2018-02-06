@@ -2,16 +2,15 @@ source https://www.nuget.org/api/v2
 framework: auto-detect
 storage: none
 
+clitool dotnet-fable
 nuget fsharp.core redirects: force
 nuget suave
 nuget status
 nuget Fable.JsonConverter
-nuget jose-jwt
 nuget newtonsoft.json >= 10.0.3
 nuget Fable.Core
 nuget Fable.Import.Browser
 nuget Fable.React
-clitool dotnet-fable
 nuget Fable.PowerPack
 nuget shopifysharp
 nuget davenport.fsharp

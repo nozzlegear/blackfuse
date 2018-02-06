@@ -2,14 +2,13 @@ module Routes.Orders
 
 open Suave 
 open Filters 
-open Suave.Filters
 open Suave.Operators
 open ShopifySharp
 open Domain.Requests.Orders
 open ShopifySharp.Filters
 open Davenport.Fsharp
 
-let listOrders = withUser <| fun user req ctx -> async {
+let listOrders = withUserAndSession <| fun user _ req ctx -> async {
     let limit = 
         match req.queryParam "limit" with 
         | Choice1Of2 header -> 

@@ -101,6 +101,14 @@ let createSession session = async {
     return { session with id = result.Id; rev = result.Rev }
 }
 
+let updateSession id rev session = async {
+    let! result = sessionDb |> update<Session> id rev session
+
+    assert result.Ok
+
+    return { session with id = result.Id; rev = result.Rev }
+}
+
 let getSession id rev = sessionDb |> get<Session> id rev
 
 let deleteSession id rev = sessionDb |> delete id rev

@@ -2,7 +2,6 @@ module Errors
 open Domain
 open Status
 
-
 type HttpException (message, status) =
     inherit System.Exception(message)
     member x.status: Status.Code = status
@@ -12,6 +11,8 @@ type HttpException (message, status) =
         { statusCode = statusCode
           statusDescription = statusDescription
           message = message }
+
+let toErrorResponse (ex: HttpException) = ex.toErrorResponse()
 
 let fromValidation (errorMap: Map<string, string list>) =
     let message = Validation.getMessage errorMap

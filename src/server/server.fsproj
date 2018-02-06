@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="../shared/String.fs" />
     <Compile Include="../shared/Option.fs" />
+    <Compile Include="../shared/Async.fs" />
     <Compile Include="../shared/Date.fs" />
     <Compile Include="../shared/Constants.fs" />
     <Compile Include="../shared/Validation.fs" />
@@ -18,7 +19,7 @@
     <Compile Include="Folder.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Database.fs" />
-    <Compile Include="Jwt.fs" />
+    <Compile Include="Session.fs" />
     <Compile Include="Filters.fs" />
     <Compile Include="WebhookProcessor.fs" />
     <Compile Include="routes/Auth.fs" />
