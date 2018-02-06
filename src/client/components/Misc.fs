@@ -6,27 +6,15 @@ open Fable.Import.React
 module R = Fable.Helpers.React
 module P = R.Props
 
-let Box title description error footer children =
-    R.div [P.ClassName "box theme"] [
-        R.div [P.ClassName "panel active"] [
-            R.div [P.ClassName "header"] [
-                R.h4 [] [R.str title]
+let Paragraph s = R.p [] [R.str s]
 
-                match description with
-                | Some s -> Some <| R.p [] [R.str s]
-                | None -> None
-                |> R.opt
-            ]
-            R.div [P.ClassName "body"] children
-            R.div [P.ClassName "footer"] [
-                match error with
-                | Some s -> Some <| R.p [P.ClassName "error"] [R.str s]
-                | None -> None
-                |> R.opt
-                R.opt footer
-            ]
-        ]
-    ]
+/// Same as the `Paragraph` function, but centers the text with .text-center class.
+let ParagraphCentered s = R.p [P.ClassName "text-center"] [R.str s]
+
+let Error msg = R.p [P.ClassName "error red"] [R.str msg]
+
+/// Same as the `Error` function, but centers the text with .text-center class.
+let ErrorCentered msg = R.p [P.ClassName "error red text-center"] [R.str msg]
 
 let ControlGroup label control =
     R.div [P.ClassName "control-group"] [
@@ -68,34 +56,25 @@ let Instruction text =
         R.p [] [R.str text]
     ]
 
-let PureGrid classNames (attributes: Fable.Helpers.React.Props.IHTMLProp list) = 
-    let atts = attributes@[P.ClassName <| sprintf "pure-g %s" classNames]    
-    R.div atts
-
-let PureUnit fractionOf24 classNames (attributes: Fable.Helpers.React.Props.IHTMLProp list) = 
-    let atts = attributes@[P.ClassName <| sprintf "pure-u-%i-24 %s" fractionOf24 classNames]
-    R.div atts
-
-let Error msg = R.p [P.ClassName "error red"] [R.str msg]
-
-/// Same as the `Error` function, but centers the error message in a div with .text-center class.
-let ErrorCentered msg = R.div [P.ClassName "text-center"] [Error msg]
-
 let PageHeader title rightElement = 
     let leftSize, rightSize = 
         match rightElement with 
-        | Some _ -> 16, 8
-        | None -> 24, 0
+        | Some _ -> 
+            [ Pure.Base  24
+              Pure.Small 16 ], 
+            [ Pure.Base  24 
+              Pure.Small 8 ]
+        | None -> [Pure.Base 24], []
 
-    PureGrid "page-header" [] [
-        PureUnit leftSize "left" [] [R.h1 [P.ClassName" page-header-title"] [R.str title]]
+    Pure.Grid "page-header" [] [
+        Pure.Unit "left" leftSize [] [R.h1 [P.ClassName" page-header-title"] [R.str title]]
 
         match rightElement with 
         | None -> None 
-        | Some r -> PureUnit rightSize "right" [] [r] |> Some
+        | Some r -> Pure.Unit "right" rightSize [] [r] |> Some
         |> R.opt
 
-        PureUnit 24 "hr" [] [
+        Pure.Unit "hr" [Pure.Base 24] [] [
             R.hr []
         ]
     ]
@@ -121,6 +100,8 @@ let AfterMount key f =
             mounted <- true
 
     R.noscript [P.Key key; P.Ref func] []
+
+
 
 module InfoBox = 
     type Props = private {

@@ -65,10 +65,11 @@ let Page dict =
             | Some _ -> sprintf "Encountered an error while activating your %s subscription." Constants.AppName
             | None -> "Please wait."
 
-        C.Box
-        <| match error with Some _ -> "Subscription Error" | None -> "Activating free trial."
-        <| Some description
-        <| error
-        <| footer
-        <| [body]
+        match error with Some _ -> "Subscription Error" | None -> "Activating free trial."
+        |> Box.title
+        |> Box.description (Some description)
+        |> Box.error error
+        |> Box.footer footer
+        |> Box.make [body]
+        
     |> MobxReact.Observer

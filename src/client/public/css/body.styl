@@ -49,7 +49,12 @@ hr {
         text-align left 
     }    
     .right {
-        text-align right     
+        text-align right
+
+        // 568 is the small-width cutoff for PureCSS, and is where the Components.PageHeader is set to cutoff at.
+        @media screen and (max-width: 568px) {
+            text-align left
+        }
     }
     .hr {
         hr {

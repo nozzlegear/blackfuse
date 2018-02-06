@@ -110,9 +110,9 @@ let Page (page: int) =
                         |> R.tbody []
                     ]
                     R.hr []
-                    C.PureGrid "" [] [
-                        C.PureUnit 16 "" [] []
-                        C.PureUnit 8 "" [] [pageSelector]
+                    Pure.Grid "" [] [
+                        Pure.Unit "" [Pure.Medium 16; Pure.Base 24] [] []
+                        Pure.Unit "" [Pure.Medium 8; Pure.Base 24] [] [pageSelector]
                     ]
                 ]
 

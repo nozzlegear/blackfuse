@@ -58,10 +58,9 @@ let Page dict =
                 ]
             ]
 
-        C.Box
-        <| sprintf "Start your free trial of %s." Constants.AppName
-        <| None
-        <| error
-        <| footer
-        <| [body]
+        sprintf "Start your free trial of %s." Constants.AppName
+        |> Box.title
+        |> Box.error error
+        |> Box.footer footer
+        |> Box.make [body]
     |> MobxReact.Observer

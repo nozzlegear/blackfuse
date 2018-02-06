@@ -62,10 +62,11 @@ let Page dict =
             | Some _ -> "Encountered an error while completing Shopify OAuth handshake."
             | None -> "Please wait."
 
-        C.Box
-        <| match error with Some _ -> "OAuth Error" | None -> "Signing In..."
-        <| Some description
-        <| error
-        <| footer
-        <| [body]
+        match error with Some _ -> "OAuth Error" | None -> "Signing In..."
+        |> Box.title 
+        |> Box.description (Some description)
+        |> Box.error error 
+        |> Box.footer footer
+        |> Box.make [body]
+        
     |> MobxReact.Observer

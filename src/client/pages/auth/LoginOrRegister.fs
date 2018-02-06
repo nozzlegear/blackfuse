@@ -85,14 +85,15 @@ let Page (pageType: PageType) dict =
             | Register -> sprintf "Enter your myshopify.com domain below to connect your Shopify store with %s." Constants.AppName
         let domain = Mobx.get S.Form.domain |> Option.defaultValue ""
 
-        C.Box
-        <| match pageType with | Login -> "Login." | Register -> "Create an account."
-        <| Some description
-        <| Mobx.get S.Form.error
-        <| Some footer
-        <| [
+        match pageType with | Login -> "Login." | Register -> "Create an account."
+        |> Box.title
+        |> Box.description (Some description)
+        |> Box.error (Mobx.get S.Form.error)
+        |> Box.footer (Some footer)
+        |> Box.make [
             R.form [] [
                 C.TextboxWithLabel "Your *.myshopify.com domain:" domain (Some >> S.Form.updateDomain)
             ]
         ]
+        
     |> MobxReact.Observer

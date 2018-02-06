@@ -28,7 +28,9 @@
     <Compile Include="stores/Dashboard.fs" />
     <Compile Include="PathScan.fs" />
     <Compile Include="Router.fs" />
-    <Compile Include="Components.fs" />
+    <Compile Include="components/Pure.fs" />
+    <Compile Include="components/Misc.fs" />
+    <Compile Include="components/Box.fs" />
     <Compile Include="pages/auth/LoginOrRegister.fs" />
     <Compile Include="pages/auth/CompleteOauth.fs" />
     <Compile Include="pages/billing/GetUrl.fs" />
