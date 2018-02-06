@@ -10,18 +10,18 @@ let token =
 let session = mobx.computed <| fun _ ->
     match mobx.get token with
     | Some t ->
-        Some <| Fable.Import.JwtSimple.decodeNoVerify<SessionToken> t
+        Some <| Fable.Core.JsInterop.ofJson<Session> t
     | None -> None
 
 let isAuthenticated = mobx.computed (fun _ ->
     match mobx.get session with
     | None -> false
-    | Some s -> Option.isSome s.shopName && Option.isSome s.myShopifyUrl
+    | Some s -> Option.isSome s.user.shopName && Option.isSome s.user.myShopifyUrl
 )
 
 let hasSubscription = mobx.computed (fun _ ->
     mobx.get session
-    |> Option.map (fun s -> Option.isSome s.subscription)
+    |> Option.map (fun s -> Option.isSome s.user.subscription)
     |> Option.defaultValue false
 )
 

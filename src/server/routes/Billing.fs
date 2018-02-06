@@ -67,11 +67,11 @@ let createOrUpdateCharge = withUser <| fun user req ctx -> async {
           planName = charge.Name
           price = charge.Price.Value }
     let! user = Database.updateUser user.id user.rev ({user with subscription = Some subscription})
-
+    let! session = {  }
     return!
         Successful.OK "{}"
         >=> Writers.setMimeType Json.MimeType
-        >=> Cookie.setCookie (Routes.Auth.createSessionCookie user)
+        >=> Cookie.setCookie (Routes.Auth.createSession user)
         <| ctx
 }
 

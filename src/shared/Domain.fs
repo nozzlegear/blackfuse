@@ -2,6 +2,7 @@ module Domain
 
 open System
 open Validation
+open Fable
 
 type ErrorResponse =
     { statusCode: int
@@ -29,8 +30,9 @@ type User = {
 }
 
 /// A pared-down User object, containing only the data needed by the client. Should NEVER contain sensitive data like the user's password.
-type SessionToken =
-  { id: string
+type ParedUser = 
+  {
+    id: string
     rev: string
     /// The date the user was created, in unix seconds (not JS milliseconds).
     created: int64
@@ -38,18 +40,30 @@ type SessionToken =
     myShopifyUrl: string option
     shopName: string option
     subscription: Subscription option
-    /// The date the SessionToken expires, in unix seconds (not JS milliseconds).
-    exp: int64 }
-  with
-  static member FromUser exp (user: User) =
-    { id = user.id
-      rev = user.rev
-      myShopifyUrl = user.myShopifyUrl
-      shopId = user.shopId
-      shopName = user.shopName
-      subscription = user.subscription
-      created = user.created
-      exp = exp }
+  }
+  with 
+  static member FromUser (user: User) = 
+   { id = user.id
+     rev = user.rev
+     myShopifyUrl = user.myShopifyUrl
+     shopId = user.shopId
+     shopName = user.shopName
+     subscription = user.subscription
+     created = user.created }
+
+/// Represents a logged in user. 
+type Session =
+  { id: string
+    rev: string
+    signature: string
+    created: DateTime
+    user: ParedUser }
+  with 
+  /// Converts the record to an encodable version that can be stringified to JSON and hashed with a secret key. 
+  member x.ToEncodable() = 
+    if x.created = System.DateTime() 
+    then raise <| System.Exception "Session.created must not be the default DateTime value."
+    else { x with id = ""; rev = ""; signature = "" }
 
 /// Represent's a Shopify order's status.
 type OrderStatus =

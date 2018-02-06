@@ -8,7 +8,8 @@ module C = Components
 
 let Page _ = 
     fun _ ->
-        let user = Mobx.get Stores.Auth.session |> Option.get
+        let session = Mobx.get Stores.Auth.session |> Option.get
+        let user = session.user
         let sub = user.subscription |> Option.get
         let domain = Option.get user.myShopifyUrl
 

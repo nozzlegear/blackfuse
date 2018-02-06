@@ -26,6 +26,14 @@ let private userDb =
     |> revField "rev" // Map the User record's rev label to CouchDB's _rev field
     |> warning (Event.add printWarning)
 
+let private sessionDb = 
+    ServerConstants.couchdbUrl
+    |> database "blackfuse_sessions"
+    |> addUsernameAndPassword
+    |> idField "id"
+    |> revField "rev"
+    |> warning (Event.add printWarning)    
+
 /// Configures all couchdb databases used by this app by creating them (if they don't exist), creating indexes and creating/updating design docs.
 let configureDatabases = async {
     let userDbIndexes = ["shopId"] // Makes searching for users by their ShopId faster
@@ -35,6 +43,7 @@ let configureDatabases = async {
     let! _ =
         Async.Parallel [
             userDb |> configureDatabase userDbDesignDocs userDbIndexes
+            sessionDb |> configureDatabase [] []
         ]
 
     ()
@@ -83,3 +92,15 @@ let updateUser id rev user = async {
 
     return { user with id = result.Id; rev = result.Rev }
 }
+
+let createSession session = async {
+    let! result = sessionDb |> create<Session> session 
+
+    assert result.Ok
+
+    return { session with id = result.Id; rev = result.Rev }
+}
+
+let getSession id rev = sessionDb |> get<Session> id rev
+
+let deleteSession id rev = sessionDb |> delete id rev

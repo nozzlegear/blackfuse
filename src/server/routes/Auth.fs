@@ -8,14 +8,27 @@ open Operators
 open ShopifySharp
 open Errors
 
-let createSessionCookie (user: Domain.User) =
+/// Takes a user and turns it into a Session, adding the signature label and creating the database entry.
+let createSession (user: Domain.User) = 
+    { id = ""  // Will be created by CouchDB
+      rev = "" // Will be created by CouchDB 
+      signature = "" // Will be created with Jwt.sign
+      created = DateTime.UtcNow
+      user = ParedUser.FromUser user }
+    |> Jwt.sign 
+    |> Database.createSession
+
+let createSessionCookie (session: Session) = 
     // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
     let cookieExpiration = DateTimeOffset.UtcNow.AddYears 10
+    let cookie = 
+        session 
+        |> Json.stringify
+        |> HttpCookie.createKV Constants.CookieName 
 
-    user
-    |> Jwt.encode Jwt.DefaultExpiration
-    |> HttpCookie.createKV Constants.CookieName
-    |> fun c -> { c with httpOnly = false; expires = Some cookieExpiration }
+    { cookie with 
+        httpOnly = false 
+        expires = Some cookieExpiration }
 
 let createUrl = request <| fun req ctx -> async {
     let queryKey = "domain"
@@ -100,10 +113,12 @@ let loginOrRegister = request <| fun req ctx -> async {
     if not <| ServerConstants.domain.ToLower().Contains "localhost"
     then WebhookProcessor.post <| WebhookProcessor.CreateAll user
 
+    let! session = createSession user
+
     return!
         Successful.OK "{}"
         >=> Writers.setMimeType Json.MimeType
-        >=> Cookie.setCookie (createSessionCookie user)
+        >=> Cookie.setCookie (createSessionCookie session)
         <| ctx
 }
 
