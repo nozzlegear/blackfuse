@@ -62,7 +62,8 @@ let private handleAppUninstalled = Json.parseFromBody<Shop> >> fun shop -> async
     let! getUser = Database.getUserByShopId shop.Id.Value
 
     match getUser with
-    | None -> () // Do nothing, there's no user that has that shop id.
+    | None -> 
+        () // Do nothing, there's no user that has that shop id.
     | Some user ->
         // Erase the user's access token, shopify charge, shop name and shop url, but keep their shop id so we can restore their
         // account if they ever reinstall the app.
@@ -70,6 +71,9 @@ let private handleAppUninstalled = Json.parseFromBody<Shop> >> fun shop -> async
             ({ user with shopifyAccessToken = None; myShopifyUrl = None; subscription = None; shopName = None })
             |> Database.updateUser user.id user.rev
             |> Async.Ignore
+
+        // Invalidate any of the user's auth sessions by deleting them
+        do! Database.deleteSessionsForUser user.id
 }
 
 let private handleShopUpdated = Json.parseFromBody<Shop> >> fun shop -> async {

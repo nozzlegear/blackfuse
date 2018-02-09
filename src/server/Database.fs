@@ -38,15 +38,14 @@ let private sessionDb =
 let configureDatabases = async {
     let userDbIndexes = ["shopId"] // Makes searching for users by their ShopId faster
     let userDbDesignDocs = []
+    let sessionDbIndexes = ["user.id"]
 
     // Not using Async.Ignore to make sure any errors thrown by database configuration bubble up to the app.
-    let! _ =
-        Async.Parallel [
+    do! Async.Parallel [
             userDb |> configureDatabase userDbDesignDocs userDbIndexes
-            sessionDb |> configureDatabase [] []
+            sessionDb |> configureDatabase [] sessionDbIndexes
         ]
-
-    ()
+        |> Async.Ignore
 }
 
 let getUserById id rev =
@@ -112,3 +111,20 @@ let updateSession id rev session = async {
 let getSession id rev = sessionDb |> get<Session> id rev
 
 let deleteSession id rev = sessionDb |> delete id rev
+
+let deleteSessionsForUser userId = async {
+    let selector = Map.ofSeq ["user.id", [EqualTo userId]]
+    let! sessions = 
+        sessionDb 
+        |> findBySelector<Session> selector None
+
+    let allMatchUser = Seq.forall (fun s -> s.user.id = userId) sessions
+    
+    assert allMatchUser
+
+    do! 
+        sessions
+        |> Seq.map (fun s -> delete s.id s.rev sessionDb)
+        |> Async.Parallel
+        |> Async.Ignore
+}
