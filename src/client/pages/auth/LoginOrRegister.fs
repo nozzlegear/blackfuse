@@ -17,7 +17,7 @@ type PageType =
     | Register
     | Login
 
-let login pageType _ =
+let login pageType =
     match Mobx.get S.Form.domain |> Option.defaultValue "" with
     | null
     | "" ->
@@ -53,13 +53,17 @@ let login pageType _ =
 
 let Page (pageType: PageType) dict =
     fun _ ->
+        let onSubmit (e: React.SyntheticEvent) = 
+            e.preventDefault()
+            login pageType
+
         let footer =
             match Mobx.get S.Form.loading with
             | true ->
                 R.progress [] []
             | false ->
                 R.div [] [
-                    R.button [P.ClassName "btn blue"; P.OnClick (ignore >> login pageType)] [
+                    R.button [P.ClassName "btn blue"; P.OnClick onSubmit] [
                         match pageType with
                         | Register -> "Connect Shopify Store"
                         | Login -> "Authenticate With Shopify"
@@ -69,7 +73,7 @@ let Page (pageType: PageType) dict =
                     match pageType with
                     | Register ->
                         [
-                            R.str "Already have an account?"
+                            R.str "Already have an account? "
                             Router.link Paths.Client.Auth.login None [] [R.str "Sign in!"]
                         ]
                     | Login ->
@@ -91,7 +95,7 @@ let Page (pageType: PageType) dict =
         |> Box.error (Mobx.get S.Form.error)
         |> Box.footer (Some footer)
         |> Box.make [
-            R.form [] [
+            R.form [P.OnSubmit onSubmit] [
                 C.TextboxWithLabel "Your *.myshopify.com domain:" domain (Some >> S.Form.updateDomain)
             ]
         ]
