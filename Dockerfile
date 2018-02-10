@@ -1,15 +1,34 @@
-FROM node 
+FROM microsoft/dotnet
 WORKDIR /app
 
-# COPY package.json paket.dependencies ./
-COPY package.json ./
+# Install nodejs, yarn and mono
+RUN curl -sL "https://deb.nodesource.com/setup_8.x" | bash -
+RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get -qq update && apt-get -qq install -y nodejs yarn mono-complete
 
-RUN "npm i -g yarn"
-RUN "yarn install"
+# Restore yarn packages first  to take advantage of cache
+COPY package.json .
+COPY yarn.lock .
+RUN yarn install --production=false
 
-COPY src/client/ ./
+# Restore dotnet next
+COPY paket.lock .
+COPY paket.dependencies .
+COPY .paket ./.paket
+COPY Nuget.Config .
+COPY *.sln .
+COPY src/client/*.fsproj src/client/
+COPY src/client/paket.references src/client/
+COPY src/server/*.fsproj src/server/
+COPY src/server/paket.references src/server/
 
-RUN "yarn build"
+RUN dotnet restore
+
+# Copy everything else and build
+COPY . .
+RUN find . -not -iwholename './node_modules/*'
+RUN cd src/client && dotnet fable yarn-build && cd -
 
 # FROM microsoft/dotnet
 # WORKDIR /app

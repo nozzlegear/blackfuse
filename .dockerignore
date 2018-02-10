@@ -1,0 +1,14 @@
+.git
+temp
+paket-files
+packages
+node_modules
+bin
+.fake
+.gitsecret
+env.*.yml
+env.yml
+src/*/bin
+src/*/obj
+src/*/temp
+.paket/paket.exe
