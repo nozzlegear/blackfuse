@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifiers>linux-x64,win-x64,osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../shared/String.fs" />
