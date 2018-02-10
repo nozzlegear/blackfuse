@@ -1,5 +1,4 @@
 source https://www.nuget.org/api/v2
-framework: auto-detect
 storage: none
 
 clitool dotnet-fable
@@ -10,13 +9,12 @@ nuget Fable.JsonConverter
 nuget newtonsoft.json >= 10.0.3
 nuget Fable.Core
 nuget Fable.Import.Browser
-nuget Fable.React
+nuget Fable.React = 1.2.2
 nuget Fable.PowerPack
 nuget shopifysharp
 nuget davenport.fsharp
 
 group Build
   source https://nuget.org/api/v2
-  framework >= net461
   nuget FAKE
   nuget dotenvfile
