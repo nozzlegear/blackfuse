@@ -1,16 +1,16 @@
 source https://www.nuget.org/api/v2
 storage: none
 
-clitool dotnet-fable
+clitool dotnet-fable = 1.3.7
 nuget fsharp.core redirects: force
 nuget suave
 nuget status
-nuget Fable.JsonConverter
+nuget Fable.JsonConverter = 1.0.7
 nuget newtonsoft.json >= 10.0.3
-nuget Fable.Core
-nuget Fable.Import.Browser
+nuget Fable.Core = 1.3.7
+nuget Fable.Import.Browser = 0.1.2
 nuget Fable.React = 1.2.2
-nuget Fable.PowerPack
+nuget Fable.PowerPack = 1.3.2
 nuget shopifysharp
 nuget davenport.fsharp
 
