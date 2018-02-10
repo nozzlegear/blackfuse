@@ -3570,8 +3570,8 @@ react-icons@^2.2.7:
     react-icon-base "2.1.0"
 
 react-material-navbar@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/react-material-navbar/-/react-material-navbar-1.2.0.tgz#361e5d995840d85544b6b55e7c6bba20c577ea90"
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/react-material-navbar/-/react-material-navbar-1.2.1.tgz#6014b3a388063a38b9fa303b46ab997a079d88b0"
   dependencies:
     prop-types "^15.6.0"
     react "^16.1.1"
@@ -3609,8 +3609,8 @@ react@16.0.0:
     prop-types "^15.6.0"
 
 react@^16.1.1:
-  version "16.1.1"
-  resolved "https://registry.yarnpkg.com/react/-/react-16.1.1.tgz#d5c4ef795507e3012282dd51261ff9c0e824fe1f"
+  version "16.2.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-16.2.0.tgz#a31bd2dab89bff65d42134fa187f24d054c273ba"
   dependencies:
     fbjs "^0.8.16"
     loose-envify "^1.1.0"
