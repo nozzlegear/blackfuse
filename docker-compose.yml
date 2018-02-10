@@ -1,0 +1,19 @@
+# WARNING: Trying to run docker-compose from within VS Code on Windows will throw an obscure error. Run it from a PowerShell window instead
+# https://github.com/docker/compose/issues/5019
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+    - "3000:3000"
+    # env_file: env.dev.yml
+    volumes:
+    - logvolume01:/var/log
+    links:
+    - database
+  database:
+    image: klaemo/couchdb
+    ports: 
+    - "5984:5984"
+volumes:
+  logvolume01: {}
