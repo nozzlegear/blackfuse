@@ -4,16 +4,20 @@ version: '3'
 services:
   app:
     build: .
+    depends_on: 
+    - database
+    env_file: env.dev.yml
+    environment:
+      COUCHDB_URL: "database:5984"
     ports:
     - "3000:3000"
-    # env_file: env.dev.yml
     volumes:
     - logvolume01:/var/log
-    links:
-    - database
+    restart: unless-stopped
+    command: ["./wait-for-it.sh", "database:5984", "--", "./dist/server"]
   database:
     image: klaemo/couchdb
     ports: 
-    - "5984:5984"
+    - "3001:5984" # Expose the database to the host machine on localhost:3001
 volumes:
   logvolume01: {}

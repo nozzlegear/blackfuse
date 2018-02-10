@@ -16,8 +16,8 @@ RUN yarn install --production=false
 COPY paket.lock .
 COPY paket.dependencies .
 COPY .paket ./.paket
-COPY Nuget.Config .
 COPY *.sln .
+COPY Nuget.Config .
 COPY src/client/*.fsproj src/client/
 COPY src/client/paket.references src/client/
 COPY src/server/*.fsproj src/server/
