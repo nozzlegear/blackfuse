@@ -190,3 +190,7 @@ src/server/temp/token.txt
 env.dev.yml
 env.live.yml
 env.yml
+
+# Ignore built files 
+src/*/dist
+dist
