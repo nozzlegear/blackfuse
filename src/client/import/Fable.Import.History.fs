@@ -14,6 +14,6 @@ type IBrowserHistory =
     abstract go: int -> unit
     abstract goBack: unit -> unit
     abstract goForward: unit -> unit
-    abstract canGo: int -> bool
+    // abstract canGo: int -> bool
 
 let createBrowserHistory = import<unit -> IBrowserHistory> "createBrowserHistory" "history"

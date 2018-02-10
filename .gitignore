@@ -194,3 +194,4 @@ env.yml
 # Ignore built files 
 src/*/dist
 dist
+src/client/public/js/client.*

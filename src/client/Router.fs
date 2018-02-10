@@ -41,7 +41,7 @@ let back = history.goBack
 
 let go = history.go
 
-let canGo = history.canGo
+// let canGo = history.canGo
 
 let rec tryMatchRoute currentPath (route: Route): (RouteRenderer * GuardFunc) option =
     match route with
