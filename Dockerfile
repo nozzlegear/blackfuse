@@ -27,8 +27,8 @@ RUN dotnet restore
 # Copy everything else and build
 COPY . .
 RUN cd src/client && dotnet fable yarn-build && cd -
-RUN dotnet publish -c release -r linux-x64 -o ../../dist src/server/server.fsproj
-RUN find . -not -iwholename './node_modules/*'
+RUN dotnet publish -c release -r linux-x64 -o /app/dist src/server/server.fsproj
+RUN find ./dist
 
 # Make the server file executable
 RUN chmod +x dist/server
