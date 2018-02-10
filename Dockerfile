@@ -22,34 +22,17 @@ COPY src/client/*.fsproj src/client/
 COPY src/client/paket.references src/client/
 COPY src/server/*.fsproj src/server/
 COPY src/server/paket.references src/server/
-
 RUN dotnet restore
 
 # Copy everything else and build
 COPY . .
-RUN find . -not -iwholename './node_modules/*'
 RUN cd src/client && dotnet fable yarn-build && cd -
-RUN dotnet publish -c release -o dist
+RUN dotnet publish -c release -r linux-x64 -o ../../dist src/server/server.fsproj
+RUN find . -not -iwholename './node_modules/*'
 
-# TODO: Copy the src/client/public files to somewhere the server will find them
+# Make the server file executable
+RUN chmod +x dist/server
 
-# Expose the server's port
 EXPOSE 3000
-
-# FROM microsoft/dotnet
-# WORKDIR /app
-
-# # copy project and restore as distinct layers
-# COPY .paket/ *.sln paket.lock paket.dependencies src/*/paket.references src/client/*.fsproj src/server/*.fsproj ./
-
-# RUN "./.paket/paket.bootstrapper.exe"
-# RUN "./.paket/paket.exe restore"
-# RUN "dotnet restore"
-
-# # copy everything else and build
-# COPY . ./
-# RUN dotnet publish -c release -o dist
-
-# HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
-
-# CMD ["./dist/server.dll"]
+HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
+CMD ["./dist/server"]
