@@ -11,4 +11,6 @@ env.yml
 src/*/bin
 src/*/obj
 src/*/temp
+src/*/dist
+dist/
 .paket/paket.exe
