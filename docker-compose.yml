@@ -6,7 +6,7 @@ services:
     build: .
     depends_on: 
     - database
-    env_file: env.dev.yml
+    env_file: env.live.yml
     environment:
       COUCHDB_URL: "database:5984"
     ports:
