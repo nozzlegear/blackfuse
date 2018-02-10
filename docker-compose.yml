@@ -19,5 +19,6 @@ services:
     image: klaemo/couchdb
     ports: 
     - "3001:5984" # Expose the database to the host machine on localhost:3001
+    restart: unless-stopped
 volumes:
   logvolume01: {}
