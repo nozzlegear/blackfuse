@@ -5,7 +5,7 @@ WORKDIR /app
 RUN curl -sL "https://deb.nodesource.com/setup_8.x" | bash -
 RUN curl -sS "https://dl.yarnpkg.com/debian/pubkey.gpg" | apt-key add -
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get -qq update && apt-get -qq install -y nodejs yarn mono-complete
+RUN apt-get -qq update && apt-get -qq install -y nodejs yarn mono-complete libc-bin
 
 # Restore yarn packages first  to take advantage of cache
 COPY package.json .
@@ -29,6 +29,12 @@ RUN dotnet restore
 COPY . .
 RUN find . -not -iwholename './node_modules/*'
 RUN cd src/client && dotnet fable yarn-build && cd -
+RUN dotnet publish -c release -o dist
+
+# TODO: Copy the src/client/public files to somewhere the server will find them
+
+# Expose the server's port
+EXPOSE 3000
 
 # FROM microsoft/dotnet
 # WORKDIR /app
