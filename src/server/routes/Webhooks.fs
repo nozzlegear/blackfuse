@@ -10,7 +10,7 @@ let respondToWebhook (processorMessage: byte[] -> WebhookMessage) = request <| f
     |> WebhookProcessor.post
 
     // Always write success as error responses will cause Shopify to continuously retry.
-    Successful.OK "" ctx
+    Writers.writeEmpty 200 ctx
 
 let routes = [
     POST >=> choose [

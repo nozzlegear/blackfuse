@@ -21,12 +21,12 @@
     <Compile Include="Json.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Session.fs" />
+    <Compile Include="Writers.fs" />
     <Compile Include="Filters.fs" />
     <Compile Include="WebhookProcessor.fs" />
     <Compile Include="routes/Auth.fs" />
     <Compile Include="routes/Billing.fs" />
     <Compile Include="routes/Orders.fs" />
-    <Compile Include="routes/Users.fs" />
     <Compile Include="routes/Webhooks.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

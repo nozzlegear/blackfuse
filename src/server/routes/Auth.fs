@@ -53,8 +53,8 @@ let createUrl = request <| fun req ctx -> async {
             Utils.toAbsoluteUrl Paths.Client.Auth.completeOAuth |> string)
 
     return!
-        Successful.OK <| sprintf """{"url":"%s"}""" (oauthUrl.ToString())
-        >=> Writers.setMimeType Json.MimeType
+        Map.ofSeq ["url", oauthUrl.ToString()]
+        |> Writers.writeJson 200
         <| ctx
 }
 
@@ -116,8 +116,7 @@ let loginOrRegister = request <| fun req ctx -> async {
     let! session = createSession user
 
     return!
-        Successful.OK "{}"
-        >=> Writers.setMimeType Json.MimeType
+        Writers.writeJson 200 Map.empty
         >=> Cookie.setCookie (createSessionCookie session)
         <| ctx
 }

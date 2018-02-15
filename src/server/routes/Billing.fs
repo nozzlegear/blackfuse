@@ -25,8 +25,8 @@ let createUrl = withUserAndSession <| fun user _ _ ctx -> async {
         |> Async.AwaitTask
 
     return!
-        Successful.OK <| sprintf """{"url":"%s"}""" newCharge.ConfirmationUrl
-        >=> Writers.setMimeType Json.MimeType
+        Map.ofSeq ["url", newCharge.ConfirmationUrl]
+        |> Writers.writeJson 200
         <| ctx
 }
 
@@ -76,8 +76,7 @@ let createOrUpdateCharge = withUserAndSession <| fun user session req ctx -> asy
         |> Async.Map Routes.Auth.createSessionCookie
 
     return!
-        Successful.OK "{}"
-        >=> Writers.setMimeType Json.MimeType
+        Writers.writeJson 200 Map.empty
         >=> Cookie.setCookie sessionCookie
         <| ctx
 }

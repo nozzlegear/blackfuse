@@ -75,9 +75,7 @@ let listOrders = withUserAndSession <| fun user _ req ctx -> async {
           orders = List.ofSeq orders 
           totalOrders = totalOrders
           totalPages = totalPages }
-        |> Json.stringify
-        |> Successful.OK
-        >=> Writers.setMimeType Json.MimeType
+        |> Writers.writeJson 200
         <| ctx
 }
 

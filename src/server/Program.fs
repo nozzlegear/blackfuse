@@ -22,19 +22,7 @@ let errorHandler (err: Exception) (msg: string) ctx =
             let err = serverError msg
             err.toErrorResponse()
 
-    let httpCode =
-        match HttpCode.tryParse errorResponse.statusCode with
-        | Choice1Of2 code -> code
-        | Choice2Of2 msg ->
-            printfn "Failed to parse statusCode %i to Suave HttpCode: %s" errorResponse.statusCode msg
-            HTTP_500
-
-    errorResponse
-    |> Json.stringify
-    |> Successful.OK
-    >=> Writers.setStatus httpCode
-    >=> Writers.setMimeType Json.MimeType
-    <| ctx
+    Writers.writeJson errorResponse.statusCode errorResponse ctx
 
 let wildcardRoute = request (fun req ->
     let apiRegex = Regex "(?i)^/?api/"

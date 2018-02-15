@@ -2,17 +2,16 @@ module Filters
 
 open Suave
 open Suave.Cookie
-open Suave.Operators
 open ShopifySharp
 open System.Collections.Generic
 open Microsoft.Extensions.Primitives
 
 let forbidden = 
-    Errors.forbidden "You are not authorized to access that resource. Please try logging in again."
-    |> Errors.toErrorResponse
-    |> Json.stringify
-    |> RequestErrors.FORBIDDEN
-    >=> Writers.setMimeType Json.MimeType
+    let error = 
+        Errors.forbidden "You are not authorized to access that resource. Please try logging in again."
+        |> Errors.toErrorResponse
+
+    Writers.writeJson error.statusCode error 
 
 /// Verifies that the request is authenticated via JWT cookie, then passes the SessionToken to the next function if so.
 /// ```
