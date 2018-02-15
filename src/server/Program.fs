@@ -4,11 +4,9 @@ open System
 open Suave
 open Suave.Operators
 open Errors
-open Domain
 open System.Text.RegularExpressions
 open Suave.Files
 open System.IO
-open Domain.Requests
 
 let errorHandler (err: Exception) (msg: string) ctx =
     let errorResponse =
