@@ -24,6 +24,8 @@ let private envVarDefault key defaultValue =
 /// If false, oauth redirects will go to localhost:8000.
 let isLive = (envVarDefault "NODE_ENV" "development") = "production"
 
+let sessionTokenSecretKey = envVarRequired "SESSION_TOKEN_SECRET_KEY"
+
 let shopifySecretKey = envVarRequired "SHOPIFY_SECRET_KEY"
 
 let shopifyApiKey = envVarRequired "SHOPIFY_PUBLIC_KEY"
