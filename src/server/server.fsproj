@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="../shared/String.fs" />
     <Compile Include="../shared/Option.fs" />
+    <Compile Include="../shared/UrlParser.fs" />
     <Compile Include="../shared/Async.fs" />
     <Compile Include="../shared/Date.fs" />
     <Compile Include="../shared/Constants.fs" />

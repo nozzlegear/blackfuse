@@ -58,3 +58,17 @@ let validShopifyWebhook part = request <| fun req ctx -> async {
         | false -> forbidden ctx
         | true -> part ctx
 }
+
+open Paths
+
+/// Parses a path using the UrlParser module and applies its arguments to the next webpart.
+let parsePath (p: Path<'a>) (part: 'a -> HttpContext -> Async<HttpContext option>) (x: HttpContext): Async<HttpContext option> = 
+    p.Parse x.request.path x.request.rawQuery 
+    |> Option.map (fun arg -> part arg x)
+    |> Option.defaultValue (Async.Return None)
+
+/// Operator shortcut for Filters.parsePath
+let inline (>@>) path part = parsePath path part    
+
+/// Operator shortcut for Filters.parsePath, but it drops the value parsed from the path.
+let inline (>@->) path part = parsePath path (fun _ -> part)

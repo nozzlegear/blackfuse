@@ -80,5 +80,7 @@ let listOrders = withUserAndSession <| fun user _ req ctx -> async {
 }
 
 let routes = [
-    GET >=> path Paths.Api.Orders.list >=> listOrders
+    GET >=> choose [
+        Paths.Api.Orders.list >@-> listOrders
+    ]
 ]

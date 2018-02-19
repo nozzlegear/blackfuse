@@ -45,12 +45,15 @@ let createUrl = request <| fun req ctx -> async {
 
     // Sending the user to the oauth url will let us onboard them if they haven't installed the app,
     // and let us log them in if they have.
+    let returnUrl = 
+        Paths.Client.Auth.completeOAuth.ToString()
+        |> (Utils.toAbsoluteUrl >> string)
     let oauthUrl =
         AuthorizationService.BuildAuthorizationUrl(
             ServerConstants.authScopes,
             domain,
             ServerConstants.shopifyApiKey,
-            Utils.toAbsoluteUrl Paths.Client.Auth.completeOAuth |> string)
+            returnUrl)
 
     return!
         Map.ofSeq ["url", oauthUrl.ToString()]
@@ -122,6 +125,6 @@ let loginOrRegister = request <| fun req ctx -> async {
 }
 
 let routes = [
-    PUT >=> path Paths.Api.Auth.loginOrRegister >=> loginOrRegister
-    POST >=> path Paths.Api.Auth.createUrl >=> createUrl
+    PUT >=> (Paths.Api.Auth.loginOrRegister >@-> loginOrRegister)
+    POST >=> (Paths.Api.Auth.createUrl >@-> createUrl)
 ]

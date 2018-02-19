@@ -1,7 +1,6 @@
 module Pages.Dashboard.Index
 
 open Fable
-open Fable.Core
 open Fable.Import
 open Fable.PowerPack
 module R = Fable.Helpers.React
@@ -46,7 +45,7 @@ let formatCustomerName (customer: Domain.Customer option) =
 let selectPage pageStr = 
     try int pageStr
     with _ -> 1
-    |> Paths.Client.homeWithPage
+    |> Paths.Client.homeWithPage.ToString
     |> Router.push
 
 let Page (page: int) =
@@ -62,11 +61,11 @@ let Page (page: int) =
         ]
 
     fun _ ->
-        let Error = sprintf "Error getting orders: %s" >> C.ErrorCentered
-
+        let error = sprintf "Error getting orders: %s" >> C.ErrorCentered
+        
         let body = 
             match Mobx.get S.error, Mobx.get S.orders with 
-            | Some e, None -> Error e
+            | Some e, None -> error e
             | None, None -> loadAfterMount()
             | _, Some o when o.page <> page -> loadAfterMount()
             | _, Some o -> 
@@ -85,7 +84,7 @@ let Page (page: int) =
                     C.PageHeader (sprintf "%i Orders" o.totalOrders) (Some pageSelector)
 
                     Mobx.get S.error 
-                    |> Option.map Error
+                    |> Option.map error
                     |> R.opt
 
                     R.table [P.ClassName "pure-table pure-table-horizontal pure-table-striped"] [

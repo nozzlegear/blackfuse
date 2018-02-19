@@ -1,11 +1,7 @@
 module Pages.Billing.Result
 
-open Fable
-open Fable.Core
 open Fable.Import
 open Fable.PowerPack
-open Fable.PowerPack.PromiseImpl
-open Domain.Requests.OAuth
 module S = Stores.Billing
 module R = Fable.Helpers.React
 module P = R.Props
@@ -28,14 +24,14 @@ let completeBillingSetup _ =
                 match JsCookie.get Constants.CookieName with
                 | Some token ->
                     Stores.Auth.logIn token
-                    Router.push Paths.Client.home
+                    Router.push (Paths.Client.home.ToString())
                     S.reset()
                 | None ->
                     S.receivedError "Error parsing authorization cookie. Please try again."
         }
         |> Promise.start
 
-let Page dict =
+let Page () =
     let completer = C.AfterMount "complete-billing" completeBillingSetup
 
     fun _ ->

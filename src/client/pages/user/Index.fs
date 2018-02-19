@@ -1,6 +1,5 @@
 module Pages.User.Index
 
-open Fable.Core
 open Fable.Import
 module R = Fable.Helpers.React
 module P = R.Props 

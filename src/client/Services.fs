@@ -63,7 +63,9 @@ let sendRequest (url: string) (method: HttpMethod) (record: 'T option) =
 module Auth =
     open Domain.Requests.OAuth
     let createOauthUrl (myShopifyDomain: string) =
-        let apiUrl = sprintf "%s?domain=%s" Paths.Api.Auth.createUrl myShopifyDomain
+        let apiUrl = 
+            Paths.Api.Auth.createUrl.ToString()
+            |> fun s -> sprintf "%s?domain=%s" s myShopifyDomain
 
         sendRequest apiUrl HttpMethod.POST None
         |> getResponse
@@ -72,27 +74,27 @@ module Auth =
     let loginOrRegister rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
-        |> sendRequest Paths.Api.Auth.loginOrRegister HttpMethod.PUT
+        |> sendRequest (Paths.Api.Auth.loginOrRegister.ToString()) HttpMethod.PUT
         |> getResponse
 
 module Billing =
     open Domain.Requests.OAuth
     let createChargeUrl () =
-        sendRequest Paths.Api.Billing.createUrl HttpMethod.POST None
+        sendRequest (Paths.Api.Billing.createUrl.ToString()) HttpMethod.POST None 
         |> getResponse
         |> Promise.map (Result.map ofJson<GetShopifyOauthUrlResult>)
 
     let createOrUpdateCharge rawQueryString =
         { rawQueryString = rawQueryString }
         |> Some
-        |> sendRequest Paths.Api.Billing.createOrUpdateCharge HttpMethod.PUT
+        |> sendRequest (Paths.Api.Billing.createOrUpdateCharge.ToString()) HttpMethod.PUT
         |> getResponse
 
 module Orders = 
     open Domain.Requests.Orders
 
     let listOrders page limit = 
-        let url = sprintf "%s?limit=%i&page=%i" Paths.Api.Orders.list limit page
+        let url = sprintf "%s?limit=%i&page=%i" (Paths.Api.Orders.list.ToString()) limit page
         sendRequest url HttpMethod.GET None 
         |> getResponse 
         |> Promise.map (Result.map ofJson<ListOrdersResponse>) 

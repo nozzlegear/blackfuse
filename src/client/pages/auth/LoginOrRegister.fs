@@ -1,11 +1,8 @@
 module Pages.Auth.LoginOrRegister
 
 open Fable
-open Fable.Core
 open Fable.Import
 open Fable.PowerPack
-open Fable.PowerPack.PromiseImpl
-open Domain.Requests.OAuth
 module S = Stores.Auth
 module R = Fable.Helpers.React
 module P = R.Props
@@ -17,7 +14,7 @@ type PageType =
     | Register
     | Login
 
-let login pageType =
+let login () =
     match Mobx.get S.Form.domain |> Option.defaultValue "" with
     | null
     | "" ->
@@ -51,11 +48,11 @@ let login pageType =
         }
         |> Promise.start
 
-let Page (pageType: PageType) dict =
+let Page (pageType: PageType) () =
     fun _ ->
         let onSubmit (e: React.SyntheticEvent) = 
             e.preventDefault()
-            login pageType
+            login()
 
         let footer =
             match Mobx.get S.Form.loading with

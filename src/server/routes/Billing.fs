@@ -18,7 +18,10 @@ let createUrl = withUserAndSession <| fun user _ _ ctx -> async {
     charge.Price <- Option.toNullable <| Some Constants.SubscriptionPrice
     charge.TrialDays <- Option.toNullable <| Some Constants.FreeTrialDays
     charge.Test <- Option.toNullable <| Some (not ServerConstants.isLive)
-    charge.ReturnUrl <- Utils.toAbsoluteUrl Paths.Client.Billing.result |> string
+    charge.ReturnUrl <- 
+        Paths.Client.Billing.result.ToString()
+        |> Utils.toAbsoluteUrl 
+        |> string
 
     let! newCharge =
         service.CreateAsync charge
@@ -82,6 +85,10 @@ let createOrUpdateCharge = withUserAndSession <| fun user session req ctx -> asy
 }
 
 let routes = [
-    PUT >=> path Paths.Api.Billing.createOrUpdateCharge >=> createOrUpdateCharge
-    POST >=> path Paths.Api.Billing.createUrl >=> createUrl
+    PUT >=> choose [
+        Paths.Api.Billing.createOrUpdateCharge >@-> createOrUpdateCharge
+    ]
+    POST >=> choose [
+        Paths.Api.Billing.createUrl >@-> createUrl
+    ]
 ]

@@ -17,3 +17,5 @@ let Filter fn (computation: Async<seq<'a>>) = async {
 
     return Seq.filter fn result
 }
+
+let Return v = async { return v }

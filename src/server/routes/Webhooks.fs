@@ -14,7 +14,7 @@ let respondToWebhook (processorMessage: byte[] -> WebhookMessage) = request <| f
 
 let routes = [
     POST >=> choose [
-        path Paths.Api.Webhooks.appUninstalled >=> validShopifyWebhook (respondToWebhook HandleAppUninstalled)
-        path Paths.Api.Webhooks.shopUpdated >=> validShopifyWebhook (respondToWebhook HandleShopUpdated)
+        Paths.Api.Webhooks.appUninstalled >@-> validShopifyWebhook (respondToWebhook HandleAppUninstalled)
+        Paths.Api.Webhooks.shopUpdated >@-> validShopifyWebhook (respondToWebhook HandleShopUpdated)
     ]
 ]

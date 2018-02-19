@@ -1,11 +1,7 @@
 module Pages.Auth.CompleteOauth
 
-open Fable
-open Fable.Core
 open Fable.Import
 open Fable.PowerPack
-open Fable.PowerPack.PromiseImpl
-open Domain.Requests.OAuth
 module S = Stores.Auth
 module R = Fable.Helpers.React
 module P = R.Props
@@ -24,7 +20,7 @@ let completeOauth _ =
                 match JsCookie.get Constants.CookieName with
                 | Some token ->
                     S.logIn token
-                    Router.push Paths.Client.home
+                    Router.push (Paths.Client.home.ToString())
                     S.OAuth.reset()
                 | None ->
                     S.OAuth.receivedError "Error parsing authorization cookie. Please try again."
@@ -34,7 +30,7 @@ let completeOauth _ =
         }
         |> Promise.start
 
-let Page dict =
+let Page () =
     let oauthCompleter = C.AfterMount "complete-oauth" completeOauth
 
     fun _ ->

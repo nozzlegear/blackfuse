@@ -14,8 +14,8 @@ type private WebhookTopic =
 let private createWebhook myShopifyUrl accessToken topic = async {
     let topicStr, path =
         match topic with
-        | AppUninstalled -> "app/uninstalled", Paths.Api.Webhooks.appUninstalled
-        | ShopUpdated -> "shop/update", Paths.Api.Webhooks.shopUpdated
+        | AppUninstalled -> "app/uninstalled", Paths.Api.Webhooks.appUninstalled.ToString()
+        | ShopUpdated -> "shop/update", Paths.Api.Webhooks.shopUpdated.ToString()
 
     let hook = Webhook()
     hook.Topic <- topicStr

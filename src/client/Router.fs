@@ -1,7 +1,6 @@
 module Router
 
 open Fable.Core
-open Fable.Core.JsInterop
 open Fable.Import
 module R = Fable.Helpers.React
 module P = R.Props
@@ -11,13 +10,13 @@ type GroupContainerRenderer = React.ReactElement -> React.ReactElement
 
 type RouteRenderer = unit -> React.ReactElement
 
-type RouteMatcher = string -> RouteRenderer option
+type RouteMatcher = string -> string -> RouteRenderer option
 
 type GuardFunc = Browser.Location -> string option
 
 // Group (fun child -> R.div [] [child]) [
-//   Route (fun path -> if path = "/" then Some <| fun _ -> R.div [] [R.str "home page"] else None)
-//   Route (fun path -> if path = "/test" then Some <| fun _ -> R.div [] [R.str "/test page"] else None)
+//   Route (fun path qs -> if path = "/" then Some <| fun _ -> R.div [] [R.str "home page"] else None)
+//   Route (fun path qs -> if path = "/test" then Some <| fun _ -> R.div [] [R.str "/test page"] else None)
 // ]
 type Route =
     | Route of RouteMatcher * GuardFunc option
@@ -43,12 +42,12 @@ let go = history.go
 
 // let canGo = history.canGo
 
-let rec tryMatchRoute currentPath (route: Route): (RouteRenderer * GuardFunc) option =
+let rec tryMatchRoute (loc: Browser.Location) (route: Route): (RouteRenderer * GuardFunc) option =
     match route with
     | Group (renderGroupContainer, groupGuard, childRoutes) ->
         let matchedRoutes =
             childRoutes
-            |> Seq.map (tryMatchRoute currentPath)
+            |> Seq.map (tryMatchRoute loc)
             |> Seq.filter Option.isSome
             |> Seq.map Option.get
 
@@ -68,7 +67,7 @@ let rec tryMatchRoute currentPath (route: Route): (RouteRenderer * GuardFunc) op
             Some (render >> renderGroupContainer, onBeforeEnter)
         | None -> None
     | Route (routeMatcher, guard) ->
-        routeMatcher currentPath
+        routeMatcher loc.pathname loc.search
         |> Option.map (fun renderer -> 
             let onBeforeEnter: GuardFunc = Option.defaultValue (fun _ -> None) guard
 
@@ -79,7 +78,7 @@ let router (routes: Route list) (notFound: RouteRenderer) =
     let matchedRoute = Mobx.boxedObservable<RouteRenderer> (fun _ -> R.noscript [] [])
     let getChildMatch (loc: Browser.Location): RouteRenderer =
         routes
-        |> Seq.map (tryMatchRoute loc.pathname)
+        |> Seq.map (tryMatchRoute loc)
         |> Seq.filter Option.isSome
         |> Seq.map Option.get
         |> Seq.tryHead
@@ -103,48 +102,38 @@ let router (routes: Route list) (notFound: RouteRenderer) =
             R.noscript [] []
     |> MobxReact.Observer
 
-let trimTrailingSlash (s: string) = 
-    if s.EndsWith "/" 
-    then s.TrimEnd (char "/") 
-    else s
-
-let private stringMatch routePath handler currentPath = 
-    match System.String.Equals(trimTrailingSlash routePath, trimTrailingSlash currentPath, System.StringComparison.OrdinalIgnoreCase) with 
-    | true -> Some handler 
-    | false -> None
+[<PassGenerics>]
+let private parse (routePath: Paths.Path<'a>) (handler: 'a -> React.ReactElement) (currentPath: string) (qs: string): RouteRenderer option = 
+    routePath.Parse currentPath qs 
+    |> Option.map (fun i -> fun () -> handler i)
 
 [<PassGenerics>]
-let private scanMatch routePath handler currentPath =
-    let makeRenderer i = fun () -> handler i
-
-    // TODO: what happens when the pathscan ends with a slash but the currentpath does not?
-    PathScan.scan routePath currentPath 
-    // Try again, this time trimming the trailing slash 
-    |> Option.orElseWith (fun _ -> PathScan.scan routePath (trimTrailingSlash currentPath))
-    |> Option.map makeRenderer
-
 let route routePath handler = 
-    Route(stringMatch routePath handler, None)
+    Route(parse routePath handler, None)
 
 [<PassGenerics>]
 let routeScan routePath handler = 
-    Route(scanMatch routePath handler, None)
-
-let routeWithGuard routePath guard handler = 
-    Route (stringMatch routePath handler, Some guard)
+    Route(parse routePath handler, None)
 
 [<PassGenerics>]
+let routeWithGuard routePath guard handler = 
+    Route (parse routePath handler, Some guard)
+ 
+[<PassGenerics>]
 let routeScanWithGuard routePath guard handler = 
-    Route(scanMatch routePath handler, Some guard)
+    Route(parse routePath handler, Some guard)
 
 let group handler routes = Group (handler, None, routes)
 
 let groupWithGuard handler guard routes = Group (handler, Some guard, routes)
 
-let link href afterNavigate (props: P.IHTMLProp list) =
+let linkRaw (href: string) afterNavigate (props: P.IHTMLProp list) = 
     let onClick (e: React.MouseEvent) =
         e.preventDefault()
         history.push href
         afterNavigate |> Option.iter (fun f -> f())
 
     R.a (props@[P.Href href; P.OnClick onClick])
+
+
+let link (href: Paths.Path<unit>) = linkRaw (href.ToString())

@@ -14,3 +14,14 @@ let toString (a: string option) =
     match a with
     | Some a -> a
     | None -> ""
+
+let tuple a b =
+    match (a,b) with
+    | Some a, Some b -> Some (a,b)
+    | _ -> None
+
+let ofFunc f arg =
+    try
+        Some (f arg)
+    with _ ->
+        None

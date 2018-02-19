@@ -3,7 +3,6 @@ module AppEntry
 open Fable.Core.JsInterop
 open Fable.Import
 open Fable.Helpers.React.Props
-open Fable.Core
 module R = Fable.Helpers.React
 module Nav = Fable.Import.ReactMaterialNavbar
 module Icon = Fable.Import.ReactIcons
@@ -80,22 +79,23 @@ let appRoutes: Router.Route list =
         | WithoutSubscription, false, _
         | WithSubscription, false, _ -> Some Paths.Client.Auth.login
         | WithSubscription, true, false -> Some Paths.Client.Billing.index
+        |> Option.map (fun p -> p.ToString())
 
     let logout _ =
         Stores.Auth.logOut()
         JsCookie.remove Constants.CookieName
-        Some Paths.Client.Auth.login
+        Some <| Paths.Client.Auth.login.ToString()
 
-    let emptyPage _ = R.noscript [] []        
+    let emptyPage _ = R.noscript [] []
 
     [
         // Redirect requests to the / page to /dashboard instead. This allows using route variables on the dashboard because it doesn't think all URL segments are just variables.
-        Router.routeWithGuard "/" (fun _ -> Some Paths.Client.home) emptyPage
+        Router.routeWithGuard (Paths.plain "/") (fun _ -> Some <| Paths.Client.home.ToString()) emptyPage
         Router.routeWithGuard Paths.Client.Auth.logout logout emptyPage
 
         Router.groupWithGuard withNav (requireAuth WithSubscription) [
             Router.route Paths.Client.home Pages.Dashboard.Index.PageOne
-            Router.routeScan Paths.Client.homeWithPageScan Pages.Dashboard.Index.Page
+            Router.routeScan Paths.Client.homeWithPage Pages.Dashboard.Index.Page
 
             Router.route Paths.Client.User.index Pages.User.Index.Page
         ]
