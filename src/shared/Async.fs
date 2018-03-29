@@ -6,6 +6,10 @@ let Map fn computation = async {
     return fn result
 }
 
+let MapSeq fn = Map (Seq.map fn)
+
+let MapList fn = Map (List.map fn)
+
 let Bind fn computation = async {
     let! result = computation 
 
@@ -19,3 +23,9 @@ let Filter fn (computation: Async<seq<'a>>) = async {
 }
 
 let Return v = async { return v }
+
+let TryHead (a: Async<'a seq>) = async {
+    let! result = a
+
+    return Seq.tryHead result
+}
