@@ -59,16 +59,17 @@ let private db = function
         |> mapFields fieldMapping
         |> warning printWarning
 
+let createDefaultUserDatabase() = 
+    userDb 
+    |> createDatabase
+
 /// Configures indexes of the user database, creating them if they don't already exist.
-let configureIndexes = async {
+let configureIndexes() = 
     // Makes searching for users by their ShopId faster
     let indexes = ["shopId"] 
 
-    do! 
-        userDb 
-        |> createIndexes [] indexes
-        |> Async.Ignore
-}
+    userDb 
+    |> createIndexes [] indexes
 
 let configureDatabaseForUser = db >> fun db -> async {
     let! createResult = createDatabase db 

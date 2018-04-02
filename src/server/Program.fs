@@ -65,9 +65,18 @@ let wildcardRoute = request (fun req ->
 
 [<EntryPoint>]
 let main _ =
-    printfn "Configuring indexes for users database."
-    Database.configureIndexes |> Async.RunSynchronously
-    printfn "Indexes configured."
+    printfn "Ensuring default _users database exists."
+    Database.createDefaultUserDatabase()
+    |> Async.RunSynchronously
+    |> ignore
+
+    printfn "Configuring indexes for _users database."
+
+    Database.configureIndexes() 
+    |> Async.RunSynchronously
+    |> ignore 
+
+    printfn "Database configured."
 
     let allRoutes =
         Routes.Auth.routes
