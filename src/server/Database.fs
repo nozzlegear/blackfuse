@@ -40,7 +40,7 @@ let private fieldMapping: FieldMapping =
 /// The user database is separate from the app's own database, because it uses CouchDB's built-in users database.
 let private userDb =
     ServerConstants.couchdbUrl
-    |> database "users"
+    |> database "_users"
     |> addUsernameAndPassword
     // Map the User record's id/rev fields to CouchDB's fields. 
     |> mapFields fieldMapping
