@@ -1,7 +1,9 @@
 module Database
 
-open Davenport.Fsharp.Wrapper
+open Davenport.Fsharp
+open Davenport.Types
 open Domain
+open Suave.Logging
 
 let private asyncTryHead (a: Async<'a seq>) = async {
     let! result = a
@@ -9,7 +11,12 @@ let private asyncTryHead (a: Async<'a seq>) = async {
     return Seq.tryHead result
 }
 
-let private printWarning = printfn "%s"
+let private logger = Suave.Logging.Log.create "Davenport"
+
+let private printWarning m = 
+    Message.eventX m
+    |> logger.log Warn
+    |> Async.Start
 
 let private addUsernameAndPassword client =
     match ServerConstants.couchdbUsername, ServerConstants.couchdbPassword with
@@ -18,113 +25,185 @@ let private addUsernameAndPassword client =
     | None, Some p -> client |> password p
     | None, None -> client
 
+/// For the users database, the type must always be "user" (case-sensitive). CouchDB will reject any other value.
+let [<Literal>] UserType = "user"
+
+let [<Literal>] SessionType = "session"
+
+let private defaultFields = "id", "rev"
+
+let private fieldMapping: FieldMapping = 
+    Map.empty 
+    |> Map.add UserType defaultFields
+    |> Map.add SessionType defaultFields
+
+/// The user database is separate from the app's own database, because it uses CouchDB's built-in users database.
 let private userDb =
     ServerConstants.couchdbUrl
-    |> database "blackfuse_users"
+    |> database "users"
     |> addUsernameAndPassword
-    |> idField "id" // Map the User record's id label to CouchDB's _id field
-    |> revField "rev" // Map the User record's rev label to CouchDB's _rev field
-    |> warning (Event.add printWarning)
+    // Map the User record's id/rev fields to CouchDB's fields. 
+    |> mapFields fieldMapping
+    |> warning printWarning
 
-let private sessionDb = 
-    ServerConstants.couchdbUrl
-    |> database "blackfuse_sessions"
-    |> addUsernameAndPassword
-    |> idField "id"
-    |> revField "rev"
-    |> warning (Event.add printWarning)    
+type CouchPerUser = 
+    | UserId of string
 
-/// Configures all couchdb databases used by this app by creating them (if they don't exist), creating indexes and creating/updating design docs.
-let configureDatabases = async {
-    let userDbIndexes = ["shopId"] // Makes searching for users by their ShopId faster
-    let userDbDesignDocs = []
-    let sessionDbIndexes = ["user.id"]
+let private db = function 
+    | CouchPerUser.UserId userId ->
+        let dbName = sprintf "blackfuse_%s" userId
 
-    // Not using Async.Ignore to make sure any errors thrown by database configuration bubble up to the app.
-    do! Async.Parallel [
-            userDb |> configureDatabase userDbDesignDocs userDbIndexes
-            sessionDb |> configureDatabase [] sessionDbIndexes
-        ]
+        ServerConstants.couchdbUrl
+        |> database dbName
+        |> addUsernameAndPassword
+        |> mapFields fieldMapping
+        |> warning printWarning
+
+/// Configures indexes of the user database, creating them if they don't already exist.
+let configureIndexes = async {
+    // Makes searching for users by their ShopId faster
+    let indexes = ["shopId"] 
+
+    do! 
+        userDb 
+        |> createIndexes [] indexes
         |> Async.Ignore
 }
 
+type DatabaseDoc = 
+    | Session of Session
+    | User of User
+
+let private insertable d: InsertedDocument<obj> = 
+    match d with 
+    | DatabaseDoc.Session s -> Some SessionType, s :> obj 
+    | DatabaseDoc.User u -> Some UserType, u :> obj
+
+let private toDoc (d: Document) = 
+    match d.TypeName with 
+    | Some UserType -> 
+        d.To<User>() 
+        |> DatabaseDoc.User
+        |> Some 
+    | Some SessionType -> 
+        d.To<Session>()
+        |> DatabaseDoc.Session
+        |> Some 
+    | _ ->
+        None
+
+let private toUser = function 
+    | Some (DatabaseDoc.User d) -> Some d
+    | _ -> None
+
+let private toSession = function 
+    | Some (DatabaseDoc.Session d) -> Some d 
+    | _ -> None
+
 let getUserById id rev =
     userDb
-    |> get<User> id rev
+    |> get id rev
+    |> Async.Map (toDoc >> toUser)
 
 let getUserByShopId (id: int64) =
-    let options = Davenport.Entities.FindOptions()
-    options.Limit <- 1 |> System.Nullable
-
-    userDb
-    |> findByExpr <@ fun (u: User) -> u.shopId = id @> (Some options)
-    |> asyncTryHead
+    Map.empty 
+    |> Map.add "shopId" [FindOperator.EqualTo id]
+    |> find [FindOption.FindLimit 1]
+    <| userDb 
+    |> Async.Map Seq.ofList
+    |> Async.TryHead
+    |> Async.Map (Option.bind (toDoc >> toUser))
 
 /// Returns a tuple of (totalRows * User seq).
 let listUsers limit =
-    let options =
-        match limit with
-        | None -> None
-        | Some l ->
-            let o = Davenport.Entities.ListOptions()
-            o.Limit <- Option.toNullable l
-            Some o
+    limit 
+    |> Option.map (fun limit -> [ListOption.ListLimit limit])
+    |> Option.defaultValue []
+    |> List.append [ListOption.IncludeDocs true]
+    |> listAll
+    <| userDb
+    |> Async.Map (fun v -> 
+        let rows = 
+            v.Rows 
+            |> List.map (fun r -> r.Doc |> Option.bind (toDoc >> toUser))
 
-    userDb
-    |> listWithDocs<User> options
-    |> asyncMap (fun d -> d.TotalRows, d.Rows |> Seq.map (fun r -> r.Doc))
+        v.TotalRows, rows)
 
 /// Creates a user, returning a new user record with the Id and Rev labels filled by CouchDB.
 let createUser user = async {
-    let! result = userDb |> create<User> user
+    let! result =
+        user
+        |> DatabaseDoc.User 
+        |> insertable 
+        |> create
+        <| userDb
 
-    assert result.Ok
+    assert result.Okay
 
     return { user with id = result.Id; rev = result.Rev }
 }
 
 /// Updates the user with the given id and revision, returning a new user record with the Id and Rev labels updated by CouchDB.
 let updateUser id rev user = async {
-    let! result = userDb |> update<User> id rev user
+    let! result = 
+        user
+        |> DatabaseDoc.User 
+        |> insertable 
+        |> update id rev 
+        <| userDb
 
-    assert result.Ok
+    assert result.Okay
 
     return { user with id = result.Id; rev = result.Rev }
 }
 
-let createSession session = async {
-    let! result = sessionDb |> create<Session> session 
+let createSession = db >> fun db session -> async {
+    let! result = 
+        session 
+        |> DatabaseDoc.Session 
+        |> insertable 
+        |> create
+        <| db
 
-    assert result.Ok
-
-    return { session with id = result.Id; rev = result.Rev }
-}
-
-let updateSession id rev session = async {
-    let! result = sessionDb |> update<Session> id rev session
-
-    assert result.Ok
+    assert result.Okay
 
     return { session with id = result.Id; rev = result.Rev }
 }
 
-let getSession id rev = sessionDb |> get<Session> id rev
+let updateSession = db >> fun db id rev session -> async {
+    let! result = 
+        session 
+        |> DatabaseDoc.Session 
+        |> insertable 
+        |> update id rev
+        <| db 
 
-let deleteSession id rev = sessionDb |> delete id rev
+    assert result.Okay
 
-let deleteSessionsForUser userId = async {
-    let selector = Map.ofSeq ["user.id", [EqualTo userId]]
+    return { session with id = result.Id; rev = result.Rev }
+}
+
+let getSession = db >> fun db id rev -> 
+    db 
+    |> get id rev 
+    |> Async.Map (toDoc >> toSession) 
+
+let deleteSession = db >> fun db id rev -> 
+    db
+    |> delete id rev
+
+let deleteSessionsForUser = db >> fun db -> async {
     let! sessions = 
-        sessionDb 
-        |> findBySelector<Session> selector None
-
-    let allMatchUser = Seq.forall (fun s -> s.user.id = userId) sessions
-    
-    assert allMatchUser
+        Map.empty 
+        |> Map.add "type" [FindOperator.EqualTo SessionType]
+        |> find []
+        <| db
+        |> Async.MapSeq (toDoc >> toSession)
 
     do! 
         sessions
-        |> Seq.map (fun s -> delete s.id s.rev sessionDb)
+        |> Seq.filter Option.isSome
+        |> Seq.map (Option.get >> fun s -> delete s.id s.rev db)
         |> Async.Parallel
         |> Async.Ignore
 }
