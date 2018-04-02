@@ -93,23 +93,40 @@ let loginOrRegister = request <| fun req ctx -> async {
         ShopService(shopUrl, accessToken).GetAsync()
         |> Async.AwaitTask
     
-    // Lookup user in database to see if we're creating a new user or logging in and updating an existing one.
+    // Lookup user in database to see if we're creating a new user, logging one in, or updating an existing one.
     let! dbUser = Database.getUserByShopId <| shop.Id.GetValueOrDefault 0L
     let! user =
         match dbUser with
-        | Some u ->
+        | Some u when u.shopifyAccessToken = None || u.myShopifyUrl = None || u.shopName = None ->
+            // Update the existing user with their new access token and shop data. This can happen when a user was previously subscribed and then unsubscribed.
             { u with shopifyAccessToken = Some accessToken; myShopifyUrl = Some shopUrl; shopName = Some shop.Name }
             |> Database.updateUser u.id u.rev
-        | None ->
-            { shopifyAccessToken = Some accessToken
-              created = Date.toUnixTimestamp DateTime.UtcNow
-              id = "" // Will be filled by CouchDB
-              rev = "" // Will be filled by CouchDB
-              myShopifyUrl = Some shopUrl
-              shopName = Some shop.Name
-              shopId = shop.Id.Value
-              subscription = None }
-            |> Database.createUser
+        | Some u ->
+            // Login an existing user
+            Async.Return u
+        | None -> 
+            // Create a new user
+            async {
+                let! user =                 
+                    { shopifyAccessToken = Some accessToken
+                      created = Date.toUnixTimestamp DateTime.UtcNow
+                      id = "" // Will be filled by CouchDB
+                      rev = "" // Will be filled by CouchDB
+                      myShopifyUrl = Some shopUrl
+                      shopName = Some shop.Name
+                      shopId = shop.Id.Value
+                      subscription = None }
+                    |> Database.createUser
+
+                // Create the user's database 
+                do! 
+                    user.id 
+                    |> Database.CouchPerUser.UserId
+                    |> Database.configureDatabaseForUser
+                    |> Async.Ignore
+
+                return user
+            }
 
     // Create webhooks if we're not on localhost (hooks can't be sent to localhost).
     // WebhookProcessor will handle if they've already been created.

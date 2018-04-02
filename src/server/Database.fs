@@ -70,6 +70,22 @@ let configureIndexes = async {
         |> Async.Ignore
 }
 
+let configureDatabaseForUser = db >> fun db -> async {
+    let! createResult = createDatabase db 
+
+    // Create any necessary database indexes here
+    do! 
+        [
+            // Make it faster to look up a doc by its type
+            "type"
+        ] 
+        |> createIndexes []
+        <| db
+        |> Async.Ignore
+
+    return createResult
+}
+
 type DatabaseDoc = 
     | Session of Session
     | User of User
