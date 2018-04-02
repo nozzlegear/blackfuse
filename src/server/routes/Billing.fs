@@ -75,7 +75,7 @@ let createOrUpdateCharge = withUserAndSession <| fun user session req ctx -> asy
     let! sessionCookie = 
         { session with user = Domain.ParedUser.FromUser user }
         |> Session.sign
-        |> Database.updateSession session.id session.rev
+        |> Database.updateSession (Database.CouchPerUser.UserId user.id) session.id session.rev
         |> Async.Map Routes.Auth.createSessionCookie
 
     return!

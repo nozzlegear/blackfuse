@@ -65,9 +65,9 @@ let wildcardRoute = request (fun req ->
 
 [<EntryPoint>]
 let main _ =
-    printfn "Configuring CouchDB databases."
-    Database.configureDatabases |> Async.RunSynchronously
-    printfn "Databases configured."
+    printfn "Configuring indexes for users database."
+    Database.configureIndexes |> Async.RunSynchronously
+    printfn "Indexes configured."
 
     let allRoutes =
         Routes.Auth.routes

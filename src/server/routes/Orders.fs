@@ -6,7 +6,6 @@ open Suave.Operators
 open ShopifySharp
 open Domain.Requests.Orders
 open ShopifySharp.Filters
-open Davenport.Fsharp
 
 let listOrders = withUserAndSession <| fun user _ req ctx -> async {
     let limit = 
@@ -39,7 +38,7 @@ let listOrders = withUserAndSession <| fun user _ req ctx -> async {
     let! orders = 
         service.ListAsync filter 
         |> Async.AwaitTask
-        |> Wrapper.asyncMapSeq (fun order ->
+        |> Async.MapSeq (fun order ->
             let lineItems: Domain.LineItem list = 
                 order.LineItems
                 |> List.ofSeq

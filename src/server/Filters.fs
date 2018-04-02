@@ -25,7 +25,7 @@ let withSession part: HttpContext -> Async<HttpContext option> = request <| fun 
         |> Option.bind (fun c -> Session.tryDecode c.value)
         |> Option.map (fun session -> 
             // Pull the latest version of the session from the database to make sure it hasn't been deleted (invalidated)
-            Database.getSession session.id None 
+            Database.getSession (Database.CouchPerUser.UserId session.user.id) session.id None 
             |> Async.Bind (Option.map (fun _ -> part session req ctx) >> Option.defaultValue (forbidden ctx))
         )
         |> Option.defaultValue (forbidden ctx)

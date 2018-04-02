@@ -73,7 +73,10 @@ let private handleAppUninstalled = Json.parseFromBody<Shop> >> fun shop -> async
             |> Async.Ignore
 
         // Invalidate any of the user's auth sessions by deleting them
-        do! Database.deleteSessionsForUser user.id
+        do! 
+            user.id
+            |> Database.CouchPerUser.UserId
+            |> Database.deleteSessionsForUser
 }
 
 let private handleShopUpdated = Json.parseFromBody<Shop> >> fun shop -> async {

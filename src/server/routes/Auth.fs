@@ -16,7 +16,7 @@ let createSession (user: Domain.User) =
       created = DateTime.UtcNow
       user = ParedUser.FromUser user }
     |> Session.sign 
-    |> Database.createSession
+    |> Database.createSession (Database.CouchPerUser.UserId user.id)
 
 let createSessionCookie (session: Session) = 
     // Create a cookie that has no (practical) expiration date. Auth expiration is instead dictated by the JWT token
