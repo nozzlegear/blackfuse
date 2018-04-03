@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     command: ["./wait-for-it.sh", "database:5984", "--", "./dist/server"]
   database:
-    image: klaemo/couchdb
+    image: apache/couchdb:2.1.1
     ports: 
     - "3001:5984" # Expose the database to the host machine on localhost:3001
     restart: unless-stopped
