@@ -72,20 +72,9 @@ let main _ =
 
     printfn "Configuring indexes for _users database."
 
-    try 
-        Database.configureIndexes() 
-        |> Async.RunSynchronously
-        |> ignore 
-    with 
-    | :? Davenport.Types.DavenportException as exn when exn.ResponseBody.Contains "Error loading doc: " ->
-        // If the index has already been created, CouchDB will (for some reason) throw 500 server error when trying to create it again. 
-        // I'm not sure why it does this, as creating indexes multiple times on any other database works fine.
-        ()
-    | :? Davenport.Types.DavenportException as exn ->
-        sprintf "Error creating database indexes: %s %s" exn.Message exn.ResponseBody 
-        |> Database.log Suave.Logging.LogLevel.Fatal
-
-        reraise()
+    Database.configureIndexes() 
+    |> Async.RunSynchronously
+    |> ignore 
 
     printfn "Database configured."
 
