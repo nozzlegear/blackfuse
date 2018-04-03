@@ -121,9 +121,10 @@ let loginOrRegister = request <| fun req ctx -> async {
             async {
                 let! user =                 
                     { shopifyAccessToken = Some accessToken
-                      created = Date.toUnixTimestamp DateTime.UtcNow
+                      created = DateTime.UtcNow
                       id = "" // Will be filled by CouchDB
                       rev = "" // Will be filled by CouchDB
+                      name = string shop.Id.Value
                       myShopifyUrl = Some shopUrl
                       shopName = Some shop.Name
                       shopId = shop.Id.Value

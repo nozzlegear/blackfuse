@@ -20,9 +20,7 @@ let Page _ =
 
                 R.p [] [R.str domain]
 
-                user.created
-                |> Date.fromUnixTimestamp
-                |> fun d -> R.p [] [R.str <| sprintf "Member since %s." (Date.toMediumDateString d)]
+                R.p [] [R.str <| sprintf "Member since %s." (Date.toMediumDateString user.created)]
 
                 sprintf "%s: $%.2f/month" sub.planName sub.price
                 |> fun s -> R.p [] [R.str s]

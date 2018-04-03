@@ -2,7 +2,6 @@ module Domain
 
 open System
 open Validation
-open Fable
 
 type ErrorResponse =
     { statusCode: int
@@ -19,8 +18,10 @@ type User = {
   id: string
   /// A unique identifier used by CouchDB to version this record.
   rev: string
-  /// The date the user was created, in unix seconds (not JS milliseconds).
-  created: int64
+  /// The user's username. Required by CouchDB.
+  name: string
+  /// The date the user was created.
+  created: DateTime
   shopId: int64
   /// Will be None if the user is unsubscribed.
   shopifyAccessToken: string option
@@ -34,8 +35,8 @@ type ParedUser =
   {
     id: string
     rev: string
-    /// The date the user was created, in unix seconds (not JS milliseconds).
-    created: int64
+    name: string
+    created: DateTime
     shopId: int64
     myShopifyUrl: string option
     shopName: string option
@@ -45,6 +46,7 @@ type ParedUser =
   static member FromUser (user: User) = 
    { id = user.id
      rev = user.rev
+     name = user.name
      myShopifyUrl = user.myShopifyUrl
      shopId = user.shopId
      shopName = user.shopName
