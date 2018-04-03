@@ -13,10 +13,12 @@ let private asyncTryHead (a: Async<'a seq>) = async {
 
 let private logger = Suave.Logging.Log.create "Davenport"
 
-let private printWarning m = 
-    Message.eventX m
-    |> logger.log Warn
-    |> Async.Start
+let log level = 
+    Message.eventX 
+    >> logger.log level 
+    >> Async.Start
+
+let private printWarning = log Warn
 
 let private addUsernameAndPassword client =
     match ServerConstants.couchdbUsername, ServerConstants.couchdbPassword with
