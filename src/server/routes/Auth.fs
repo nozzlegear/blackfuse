@@ -7,6 +7,7 @@ open Filters
 open Operators
 open ShopifySharp
 open Errors
+open Davenport.Types
 
 /// Takes a user and turns it into a Session, adding the signature label and creating the database entry.
 let createSession (user: Domain.User) = 
@@ -94,7 +95,18 @@ let loginOrRegister = request <| fun req ctx -> async {
         |> Async.AwaitTask
     
     // Lookup user in database to see if we're creating a new user, logging one in, or updating an existing one.
-    let! dbUser = Database.getUserByShopId <| shop.Id.GetValueOrDefault 0L
+    let! dbUser = 
+        shop.Id.GetValueOrDefault 0L
+        |> Database.getUserByShopId
+        |> Async.Catch 
+        |> Async.Map (function 
+            | Choice1Of2 u -> u 
+            | Choice2Of2 (:? DavenportException as exn) -> 
+                sprintf "Error executing Find operation on _users database: %s %s" exn.Message exn.ResponseBody 
+                |> Database.log Logging.Fatal
+                
+                raise exn
+            | Choice2Of2 exn -> raise exn)
     let! user =
         match dbUser with
         | Some u when u.shopifyAccessToken = None || u.myShopifyUrl = None || u.shopName = None ->
@@ -117,6 +129,15 @@ let loginOrRegister = request <| fun req ctx -> async {
                       shopId = shop.Id.Value
                       subscription = None }
                     |> Database.createUser
+                    |> Async.Catch 
+                    |> Async.Map (function 
+                        | Choice1Of2 u -> u
+                        | Choice2Of2 (:? Davenport.Types.DavenportException as exn) -> 
+                            sprintf "Error creating user: %s %s" exn.Message exn.ResponseBody 
+                            |> Database.log Logging.Fatal
+
+                            raise exn
+                        | Choice2Of2 exn -> raise exn)
 
                 // Create the user's database 
                 do! 
